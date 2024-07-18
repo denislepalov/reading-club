@@ -2,19 +2,19 @@ package ru.aston.lepd.readingclub.integration.dao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.aston.lepd.readingclub.util.ObjectContainer;
 import ru.aston.lepd.readingclub.dao.BookDao;
 import ru.aston.lepd.readingclub.dao.ReaderDao;
+import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 import ru.aston.lepd.readingclub.exception.DaoException;
 import ru.aston.lepd.readingclub.integration.IntegrationTestBase;
+import ru.aston.lepd.readingclub.util.ObjectContainer;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static ru.aston.lepd.readingclub.util.Constants.*;
 
 class ReaderDaoIT extends IntegrationTestBase {
 
@@ -26,8 +26,6 @@ class ReaderDaoIT extends IntegrationTestBase {
     void init() {
         this.readerDao = new ObjectContainer().getReaderDao();
     }
-
-
 
 
     @Test
@@ -46,7 +44,6 @@ class ReaderDaoIT extends IntegrationTestBase {
 
         assertNotNull(readerDao.getBookDao());
     }
-
 
 
     @Test
@@ -70,7 +67,6 @@ class ReaderDaoIT extends IntegrationTestBase {
     }
 
 
-
     @Test
     public void findAll_whenExist_thenReturnList() {
         List<Reader> actualResult = readerDao.findAll();
@@ -89,7 +85,6 @@ class ReaderDaoIT extends IntegrationTestBase {
 
         assertTrue(actualResult.isEmpty());
     }
-
 
 
     @Test
@@ -118,14 +113,20 @@ class ReaderDaoIT extends IntegrationTestBase {
     }
 
 
-
     @Test
     void save_whenValidData_thenSuccess() {
+        final Author author = new Author();
+        author.setId(1L);
+        final Book book = new Book();
+        book.setTitle("Title");
+        book.setInventoryNumber(55555L);
+        book.setAuthors(List.of(author));
         final Reader reader = new Reader();
         reader.setName("Alex");
         reader.setSurname("Smith");
         reader.setPhone("79999999999");
         reader.setAddress("Street 5");
+        reader.setBooks(List.of(book));
 
         Reader saved = readerDao.save(reader);
 
@@ -158,11 +159,17 @@ class ReaderDaoIT extends IntegrationTestBase {
     }
 
 
-
     @Test
     void update_whenValidData_thenSuccess() {
+        final Author author = new Author();
+        author.setId(1L);
+        final Book book = new Book();
+        book.setTitle("Title");
+        book.setInventoryNumber(55555L);
+        book.setAuthors(List.of(author));
         final Long readerId = 1L;
         final Reader reader = readerDao.findById(readerId).get();
+        reader.addBook(book);
         reader.setName("Alex");
         reader.setSurname("Smith");
         reader.setPhone("79999999999");
@@ -170,7 +177,7 @@ class ReaderDaoIT extends IntegrationTestBase {
 
         boolean actualResult = readerDao.update(reader);
 
-        Reader updated = readerDao.findById(readerId).get();
+        Reader updated = readerDao.findById(reader.getId()).get();
         assertEquals(reader.getName(), updated.getName());
         assertEquals(reader.getSurname(), updated.getSurname());
         assertEquals(reader.getPhone(), updated.getPhone());
@@ -187,20 +194,21 @@ class ReaderDaoIT extends IntegrationTestBase {
         reader.setPhone("79999999999");
         reader.setAddress("Street 5");
 
-        assertThrows(DaoException.class, () -> readerDao.save(reader));
+        assertThrows(DaoException.class, () -> readerDao.update(reader));
     }
+
     @Test
     void update_whenPhoneIsNotUnique_thenThrowException() {
         final Long readerId = 1L;
         final Reader reader = readerDao.findById(readerId).get();
+        reader.setId(2L);
         reader.setName("Alex");
         reader.setSurname("Smith");
         reader.setPhone("71111111111");
         reader.setAddress("Street 5");
 
-        assertThrows(DaoException.class, () -> readerDao.save(reader));
+        assertThrows(DaoException.class, () -> readerDao.update(reader));
     }
-
 
 
     @Test
@@ -222,7 +230,6 @@ class ReaderDaoIT extends IntegrationTestBase {
         assertEquals(3, readerDao.findAll().size());
         assertFalse(actualResult);
     }
-
 
 
     @Test

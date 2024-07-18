@@ -160,6 +160,40 @@ class BookServiceIT extends IntegrationTestBase {
     }
 
     @Test
+    public void update_whenValidIdButAuthorIdsAreEmpty_thenSuccess() {
+        final Long bookId = 1L;
+        final BookDto bookDto = new BookDto();
+        bookDto.setTitle("new title");
+        bookDto.setInventoryNumber(55555L);
+        bookDto.setReaderId(1L);
+
+        boolean actualResult = bookService.update(bookDto, bookId);
+
+        BookDto updated = bookService.getById(bookId);
+        assertEquals(bookDto.getTitle(), updated.getTitle());
+        assertEquals(bookDto.getInventoryNumber(), updated.getInventoryNumber());
+        assertEquals(bookDto.getReaderId(), updated.getReaderId());
+        assertTrue(actualResult);
+    }
+
+    @Test
+    public void update_whenValidIdButReaderIdIsNull_thenSuccess() {
+        final Long bookId = 1L;
+        final BookDto bookDto = new BookDto();
+        bookDto.setTitle("new title");
+        bookDto.setInventoryNumber(55555L);
+        bookDto.setAuthorIds(List.of(2L, 3L));
+
+        boolean actualResult = bookService.update(bookDto, bookId);
+
+        BookDto updated = bookService.getById(bookId);
+        assertEquals(bookDto.getTitle(), updated.getTitle());
+        assertEquals(bookDto.getInventoryNumber(), updated.getInventoryNumber());
+        assertEquals(bookDto.getAuthorIds(), updated.getAuthorIds());
+        assertTrue(actualResult);
+    }
+
+    @Test
     public void update_whenInvalidId_thenTrowException() {
         final Long bookId = 666L;
 

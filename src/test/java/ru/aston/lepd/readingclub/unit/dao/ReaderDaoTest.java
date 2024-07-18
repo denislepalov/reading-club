@@ -13,12 +13,15 @@ import ru.aston.lepd.readingclub.util.DataSource;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
+import static ru.aston.lepd.readingclub.util.Constants.FULL_BOOK_1;
+import static ru.aston.lepd.readingclub.util.Constants.FULL_READER_1;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -32,8 +35,64 @@ class ReaderDaoTest {
     private PreparedStatement preparedStatement;
     @Mock
     private BookDao bookDao;
+    @Mock
+    private ResultSet resultSet;
     @InjectMocks
     private ReaderDao readerDao;
+
+
+
+
+
+    @Test
+    void save_shouldGeneratedKeysNextIsFalse() throws SQLException {
+        doReturn(preparedStatement).when(connection).prepareStatement(anyString(), anyInt());
+        doNothing().when(preparedStatement).setString(1, FULL_READER_1.getName());
+        doNothing().when(preparedStatement).setString(2, FULL_READER_1.getSurname());
+        doNothing().when(preparedStatement).setString(3, FULL_READER_1.getPhone());
+        doNothing().when(preparedStatement).setString(4, FULL_READER_1.getAddress());
+        doReturn(resultSet).when(preparedStatement).getGeneratedKeys();
+        doReturn(false).when(resultSet).next();
+
+        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
+            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
+            readerDao.save(FULL_READER_1);
+            dataSourceMock.verify(DataSource::getConnection);
+        }
+
+        verify(connection).prepareStatement(anyString(), anyInt());
+        verify(preparedStatement).setString(1, FULL_READER_1.getName());
+        verify(preparedStatement).setString(2, FULL_READER_1.getSurname());
+        verify(preparedStatement).setString(3, FULL_READER_1.getPhone());
+        verify(preparedStatement).setString(4, FULL_READER_1.getAddress());
+        verify(preparedStatement).getGeneratedKeys();
+        verify(resultSet).next();
+    }
+
+
+
+    @Test
+    void update_shouldUpdateResultIsZero() throws SQLException {
+        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
+        doNothing().when(preparedStatement).setString(1, FULL_READER_1.getName());
+        doNothing().when(preparedStatement).setString(2, FULL_READER_1.getSurname());
+        doNothing().when(preparedStatement).setString(3, FULL_READER_1.getPhone());
+        doNothing().when(preparedStatement).setString(4, FULL_READER_1.getAddress());
+        doReturn(0).when(preparedStatement).executeUpdate();
+
+        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
+            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
+            readerDao.update(FULL_READER_1);
+            dataSourceMock.verify(DataSource::getConnection);
+        }
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setString(1, FULL_READER_1.getName());
+        verify(preparedStatement).setString(2, FULL_READER_1.getSurname());
+        verify(preparedStatement).setString(3, FULL_READER_1.getPhone());
+        verify(preparedStatement).setString(4, FULL_READER_1.getAddress());
+        verify(preparedStatement).executeUpdate();
+    }
 
 
 
