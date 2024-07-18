@@ -1,0 +1,9 @@
+ Create postgres docker-container -> In Terminal (path ~/reading-club/):
+
+ 1. cd postgresqldocker
+
+ 2. docker compose -f postgres.yml up -d
+
+ or
+
+ 2. docker-compose -f postgres.yml up -d
