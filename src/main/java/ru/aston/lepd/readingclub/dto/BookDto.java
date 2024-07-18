@@ -3,7 +3,7 @@ package ru.aston.lepd.readingclub.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BookDto implements Cloneable {
+public class BookDto  {
 
     private String title;
     private Long inventoryNumber;
@@ -14,12 +14,6 @@ public class BookDto implements Cloneable {
     public BookDto() {
     }
 
-    public BookDto(String title, Long inventoryNumber, List<Long> authorIds, Long readerId) {
-        this.title = title;
-        this.inventoryNumber = inventoryNumber;
-        this.authorIds = authorIds;
-        this.readerId = readerId;
-    }
 
     public String getTitle() {
         return title;
@@ -55,12 +49,5 @@ public class BookDto implements Cloneable {
 
 
 
-    @Override
-    public BookDto clone() {
-        try {
-            return (BookDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
-    }
+
 }

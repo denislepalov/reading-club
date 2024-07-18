@@ -140,15 +140,19 @@ class AuthorDaoIT extends IntegrationTestBase {
 
     @Test
     void save_whenValidData_thenSuccess() {
+        final Book book = new Book();
+        book.setId(1L);
         final Author author = new Author();
         author.setFullName("Steven King");
         author.setPersonalInfo("likes fish");
+        author.setBooks(List.of(book));
 
         Author saved = authorDao.save(author);
 
         assertEquals(4L, saved.getId());
         assertEquals(author.getFullName(), saved.getFullName());
         assertEquals(author.getPersonalInfo(), saved.getPersonalInfo());
+        assertEquals(1, author.getBooks().size());
     }
 
     @Test

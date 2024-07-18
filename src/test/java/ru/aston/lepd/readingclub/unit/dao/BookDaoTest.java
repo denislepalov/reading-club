@@ -24,7 +24,6 @@ import static org.mockito.Mockito.verify;
 class BookDaoTest {
 
 
-
     @Mock
     private Connection connection;
     @Mock
@@ -33,8 +32,6 @@ class BookDaoTest {
     private AuthorBookDao authorBookDao;
     @InjectMocks
     private BookDao bookDao;
-
-
 
 
     @Test
@@ -53,7 +50,6 @@ class BookDaoTest {
         verify(preparedStatement).setLong(1, 1L);
         verify(preparedStatement).executeQuery();
     }
-
 
 
     @Test
@@ -91,7 +87,6 @@ class BookDaoTest {
     }
 
 
-
     @Test
     void findAllByAuthorId_shouldTrowException() throws SQLException {
         doReturn(preparedStatement).when(connection).prepareStatement(anyString());
@@ -108,7 +103,6 @@ class BookDaoTest {
         verify(preparedStatement).setLong(1, 1L);
         verify(preparedStatement).executeQuery();
     }
-
 
 
     @Test

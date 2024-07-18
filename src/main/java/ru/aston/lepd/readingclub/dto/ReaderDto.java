@@ -1,6 +1,6 @@
 package ru.aston.lepd.readingclub.dto;
 
-public class ReaderDto implements Cloneable {
+public class ReaderDto {
 
     private String name;
     private String surname;
@@ -42,12 +42,5 @@ public class ReaderDto implements Cloneable {
     }
 
 
-    @Override
-    public ReaderDto clone() {
-        try {
-            return  (ReaderDto) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
-    }
+
 }

@@ -2,9 +2,8 @@ package ru.aston.lepd.readingclub.entity;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
-public class Reader implements Cloneable{
+public class Reader {
 
     private Long id;
     private String name;
@@ -67,36 +66,6 @@ public class Reader implements Cloneable{
         book.setReader(this);
     }
 
-//    @Override
-//    public String toString() {
-//        return "Reader{" +
-//               "id=" + id +
-//               ", name='" + name + '\'' +
-//               ", surname='" + surname + '\'' +
-//               ", phone='" + phone + '\'' +
-//               ", address='" + address + '\'' +
-//               '}';
-//    }
-//
-//    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        Reader reader = (Reader) o;
-//        return Objects.equals(id, reader.id) && Objects.equals(name, reader.name) && Objects.equals(surname, reader.surname) && Objects.equals(phone, reader.phone) && Objects.equals(address, reader.address);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id, name, surname, phone, address);
-//    }
 
-    @Override
-    public Reader clone() {
-        try {
-            return (Reader) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
-    }
+
 }

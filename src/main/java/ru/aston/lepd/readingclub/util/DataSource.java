@@ -10,6 +10,9 @@ public class DataSource {
 
     private static HikariDataSource dataSource;
 
+    private DataSource() {
+    }
+
     public static void initialize(String jdbcUrl, String username, String password, String driver) {
         if (dataSource != null) {
             dataSource.close();

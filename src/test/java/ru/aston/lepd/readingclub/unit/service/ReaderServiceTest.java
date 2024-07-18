@@ -7,11 +7,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.aston.lepd.readingclub.dao.ReaderDao;
 import ru.aston.lepd.readingclub.dto.ReaderDto;
+import ru.aston.lepd.readingclub.entity.Author;
+import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 import ru.aston.lepd.readingclub.exception.NotFoundException;
 import ru.aston.lepd.readingclub.service.ReaderService;
 import ru.aston.lepd.readingclub.util.CustomMapper;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -36,10 +39,23 @@ class ReaderServiceTest {
 
 
 
+    private Reader getReader() {
+        Book book1 = new Book();
+        book1.setId(1L);
+        Reader reader = new Reader();
+        reader.setId(1L);
+        reader.setName("Ivan");
+        reader.setSurname("Ivanov");
+        reader.setPhone("71111111111");
+        reader.setAddress("Lenina 11");
+        FULL_READER_1.setBooks(List.of(book1));
+        return reader;
+    }
+
     @Test
     public void getById_whenValidId_thenReturnReaderDto() {
         final Long readerId = 1L;
-        final Reader reader = SHORT_READER_1.clone();
+        final Reader reader = getReader();
         doReturn(Optional.of(reader)).when(readerDao).findById(readerId);
         doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
         doReturn(READER_DTO_1).when(mapper).readerToReaderDto(any(Reader.class));
@@ -69,7 +85,7 @@ class ReaderServiceTest {
     @Test
     public void getReaderById_whenValidId_thenReturnReader() {
         final Long readerId = 1L;
-        final Reader reader = SHORT_READER_1.clone();
+        final Reader reader = getReader();
         doReturn(Optional.of(reader)).when(readerDao).findById(readerId);
         doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
 
@@ -95,8 +111,7 @@ class ReaderServiceTest {
 
     @Test
     public void getAll_whenExist_thenReturnList() {
-        doReturn(List.of(SHORT_READER_1.clone(), SHORT_READER_2.clone(), SHORT_READER_3.clone()))
-                .when(readerDao).findAll();
+        doReturn(List.of(getReader(), getReader(), getReader())).when(readerDao).findAll();
         doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(anyLong());
         doReturn(READER_DTO_1).when(mapper).readerToReaderDto(any(Reader.class));
 
@@ -147,7 +162,7 @@ class ReaderServiceTest {
     @Test
     public void update_whenValidId_thenSuccess() {
         final Long readerId = 1L;
-        final Reader author = FULL_READER_1.clone();
+        final Reader author = getReader();
         doReturn(Optional.of(author)).when(readerDao).findById(readerId);
         doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
         doReturn(true).when(readerDao).update(author);

@@ -13,6 +13,7 @@ import ru.aston.lepd.readingclub.exception.NotFoundException;
 import ru.aston.lepd.readingclub.service.AuthorService;
 import ru.aston.lepd.readingclub.util.CustomMapper;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -34,11 +35,20 @@ public class AuthorServiceTest {
 
 
 
+    private Author getAuthor() {
+        Author author = new Author();
+        author.setId(1L);
+        author.setFullName("Author1");
+        author.setPersonalInfo("likes dogs");
+        author.setBooks(List.of(new Book()));
+        return author;
+    }
+
 
     @Test
     public void getById_whenValidId_thenReturnAuthorDto() {
         final Long authorId = 1L;
-        final Author author = SHORT_AUTHOR_1.clone();
+        final Author author = getAuthor();
         doReturn(Optional.of(author)).when(authorDao).findById(authorId);
         doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
         doReturn(AUTHOR_DTO_1).when(mapper).authorToAuthorDto(any(Author.class));
@@ -68,7 +78,7 @@ public class AuthorServiceTest {
     @Test
     public void getAuthorById_whenValidId_thenReturnAuthor() {
         final Long authorId = 1L;
-        final Author author = SHORT_AUTHOR_1.clone();
+        final Author author = getAuthor();
         doReturn(Optional.of(author)).when(authorDao).findById(authorId);
         doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
 
@@ -94,8 +104,7 @@ public class AuthorServiceTest {
 
     @Test
     public void getAll_whenExist_thenReturnList() {
-        doReturn(List.of(SHORT_AUTHOR_1.clone(), SHORT_AUTHOR_2.clone(), SHORT_AUTHOR_3.clone()))
-                .when(authorDao).findAll();
+        doReturn(List.of(getAuthor(), getAuthor(), getAuthor())).when(authorDao).findAll();
         doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(anyLong());
         doReturn(AUTHOR_DTO_1).when(mapper).authorToAuthorDto(any(Author.class));
 
@@ -144,7 +153,7 @@ public class AuthorServiceTest {
     @Test
     public void update_whenValidId_thenSuccess() {
         final Long authorId = 1L;
-        final Author author = FULL_AUTHOR_1.clone();
+        final Author author = getAuthor();
         doReturn(Optional.of(author)).when(authorDao).findById(authorId);
         doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
         doReturn(true).when(authorDao).update(author);

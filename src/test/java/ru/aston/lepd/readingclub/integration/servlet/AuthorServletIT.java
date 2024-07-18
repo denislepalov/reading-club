@@ -176,8 +176,7 @@ class AuthorServletIT extends IntegrationTestBase {
     @Test
     void doPost_whenConstraintViolation_thenDaoError() throws Exception {
         final String url = "http://localhost:8080/authors";
-        AuthorDto authorDto = AUTHOR_DTO_1.clone();
-        authorDto.setFullName(null);
+        AuthorDto authorDto = new AuthorDto();
         final String body = objectMapper.writeValueAsString(authorDto);
         given()
                 .contentType(ContentType.JSON)

@@ -3,7 +3,7 @@ package ru.aston.lepd.readingclub.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Book implements Cloneable {
+public class Book {
 
     private Long id;
     private String title;
@@ -62,12 +62,5 @@ public class Book implements Cloneable {
 
 
 
-    @Override
-    public Book clone() {
-        try {
-            return (Book) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
-    }
+
 }

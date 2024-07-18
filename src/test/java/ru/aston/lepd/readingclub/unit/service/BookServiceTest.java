@@ -14,6 +14,7 @@ import ru.aston.lepd.readingclub.exception.NotFoundException;
 import ru.aston.lepd.readingclub.service.BookService;
 import ru.aston.lepd.readingclub.util.CustomMapper;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -37,11 +38,27 @@ class BookServiceTest {
 
 
 
+    private Book getBook() {
+        Reader reader = new Reader();
+        reader.setId(1L);
+        Author author1 = new Author();
+        author1.setId(1L);
+        Author author3 = new Author();
+        author3.setId(3L);
+        Book book = new Book();
+        book.setId(1L);
+        book.setTitle("Title1");
+        book.setInventoryNumber(11111L);
+        book.setAuthors(new ArrayList<>(List.of(author1, author3)));
+        book.setReader(reader);
+        return book;
+    }
+
 
     @Test
     public void getById_whenValidId_thenReturnBookDto() {
         final Long bookId = 1L;
-        final Book book = SHORT_BOOK_1.clone();
+        final Book book = getBook();
         doReturn(Optional.of(book)).when(bookDao).findById(bookId);
         doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
         doReturn(BOOK_DTO_1).when(mapper).bookToBookDto(any(Book.class));
@@ -71,7 +88,7 @@ class BookServiceTest {
     @Test
     public void getBookById_whenValidId_thenReturnBook() {
         final Long bookId = 1L;
-        final Book book = SHORT_BOOK_1.clone();
+        final Book book = getBook();
         doReturn(Optional.of(book)).when(bookDao).findById(bookId);
         doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
 
@@ -214,7 +231,7 @@ class BookServiceTest {
     @Test
     public void update_whenValidId_thenSuccess() {
         final Long bookId = 1L;
-        final Book book = FULL_BOOK_1.clone();
+        final Book book = getBook();
         doReturn(Optional.of(book)).when(bookDao).findById(bookId);
         doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
         doReturn(true).when(bookDao).update(book);

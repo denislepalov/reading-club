@@ -169,7 +169,8 @@
         </executions>
         <configuration>
           <excludes>
-            <exclude>ru/aston/lepd/readingclub/util/CustomMapperImpl.class</exclude>
+            <exclude>ru/aston/lepd/readingclub/init/</exclude>
+            <exclude>ru/aston/lepd/readingclub/util/</exclude>
           </excludes>
         </configuration>
       </plugin>

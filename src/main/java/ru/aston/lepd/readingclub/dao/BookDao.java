@@ -81,9 +81,6 @@ public class BookDao implements Dao<Long, Book> {
             """;
 
 
-
-
-
     @Override
     public Optional<Book> findById(Long bookId) {
         try (Connection connection = DataSource.getConnection();
@@ -121,9 +118,10 @@ public class BookDao implements Dao<Long, Book> {
     }
 
 
-    public List<Book> findAllByReaderId(Connection connection, Long readerId) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_BY_READER_ID_SQL)) {
 
+    public List<Book> findAllByReaderId(Long readerId) {
+        try (Connection connection = DataSource.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(FIND_ALL_BY_READER_ID_SQL)) {
             preparedStatement.setLong(1, readerId);
             ResultSet resultSet = preparedStatement.executeQuery();
             List<Book> books = new ArrayList<>();
@@ -131,15 +129,6 @@ public class BookDao implements Dao<Long, Book> {
                 books.add(buildBook(resultSet));
             }
             return books;
-
-        } catch (SQLException e) {
-            throw new DaoException(e.getMessage());
-        }
-    }
-
-    public List<Book> findAllByReaderId(Long readerId) {
-        try (Connection connection = DataSource.getConnection()) {
-            return findAllByReaderId(connection, readerId);
 
         } catch (SQLException e) {
             throw new DaoException(e.getMessage());
@@ -231,7 +220,6 @@ public class BookDao implements Dao<Long, Book> {
     }
 
 
-
     @Override
     public boolean delete(Long bookId) {
         try (Connection connection = DataSource.getConnection();
@@ -252,7 +240,7 @@ public class BookDao implements Dao<Long, Book> {
              PreparedStatement preparedStatement = connection.prepareStatement(DELETE_BY_READER_ID)) {
 
             preparedStatement.setLong(1, readerId);
-            List<Book> books = findAllByReaderId(connection, readerId);
+            List<Book> books = findAllByReaderId(readerId);
             for (Book book : books) {
                 authorBookDao.deleteAllByBookId(book.getId());
             }

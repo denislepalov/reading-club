@@ -187,8 +187,10 @@ class BookServletIT extends IntegrationTestBase {
     @Test
     void doPost_whenValidJson_thenBookDto() throws Exception {
         final String url = "http://localhost:8080/books";
-        BookDto bookDto = BOOK_DTO_1.clone();
+        BookDto bookDto = new BookDto();
+        bookDto.setTitle("Title");
         bookDto.setInventoryNumber(55555L);
+        bookDto.setReaderId(1L);
         final String body = objectMapper.writeValueAsString(bookDto);
         given()
                 .contentType(JSON)
@@ -204,8 +206,10 @@ class BookServletIT extends IntegrationTestBase {
     @Test
     void doPost_whenValidJson2_thenBookDto() throws Exception {
         final String url = "http://localhost:8080/books/";
-        BookDto bookDto = BOOK_DTO_1.clone();
+        BookDto bookDto = new BookDto();
+        bookDto.setTitle("Title");
         bookDto.setInventoryNumber(55555L);
+        bookDto.setReaderId(1L);
         final String body = objectMapper.writeValueAsString(bookDto);
         given()
                 .contentType(JSON)

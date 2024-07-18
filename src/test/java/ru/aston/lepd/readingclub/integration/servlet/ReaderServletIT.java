@@ -134,8 +134,11 @@ class ReaderServletIT extends IntegrationTestBase {
     @Test
     void doPost_whenValidJson_thenBookDto() throws Exception {
         final String url = "http://localhost:8080/readers";
-        ReaderDto readerDto = READER_DTO_1.clone();
+        ReaderDto readerDto = new ReaderDto();
+        readerDto.setName("Petr");
+        readerDto.setSurname("Ivanov");
         readerDto.setPhone("75555555555");
+        readerDto.setAddress("Lenina 11");
         final String body = objectMapper.writeValueAsString(readerDto);
         given()
                 .contentType(JSON)
@@ -151,8 +154,11 @@ class ReaderServletIT extends IntegrationTestBase {
     @Test
     void doPost_whenValidJson2_thenBookDto() throws Exception {
         final String url = "http://localhost:8080/readers/";
-        ReaderDto readerDto = READER_DTO_1.clone();
+        ReaderDto readerDto = new ReaderDto();
+        readerDto.setName("Petr");
+        readerDto.setSurname("Ivanov");
         readerDto.setPhone("75555555555");
+        readerDto.setAddress("Lenina 11");
         final String body = objectMapper.writeValueAsString(readerDto);
         given()
                 .contentType(JSON)
