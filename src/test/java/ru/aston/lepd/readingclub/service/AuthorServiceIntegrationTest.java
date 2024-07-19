@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.integration.service;
+package ru.aston.lepd.readingclub.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -6,8 +6,7 @@ import ru.aston.lepd.readingclub.util.ObjectContainer;
 import ru.aston.lepd.readingclub.dto.AuthorDto;
 import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.exception.NotFoundException;
-import ru.aston.lepd.readingclub.integration.IntegrationTestBase;
-import ru.aston.lepd.readingclub.service.AuthorService;
+import ru.aston.lepd.readingclub.util.IntegrationTestBase;
 
 import java.util.List;
 
@@ -15,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static ru.aston.lepd.readingclub.util.Constants.*;
 
 
-class AuthorServiceIT extends IntegrationTestBase {
+class AuthorServiceIntegrationTest extends IntegrationTestBase {
 
     private AuthorService authorService;
 

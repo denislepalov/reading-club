@@ -1,15 +1,13 @@
-package ru.aston.lepd.readingclub.unit.entity;
+package ru.aston.lepd.readingclub.entity;
 
 import org.junit.jupiter.api.Test;
-import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-class BookTest {
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
+class ReaderTest {
 
     @Test
     void addBook_shouldAddBook() {
@@ -24,16 +22,13 @@ class BookTest {
         book.setId(1L);
         book.setTitle("Title1");
         book.setInventoryNumber(11111L);
-        book.setReader(reader);
 
-        final Author author = new Author();
-        author.setId(1L);
-        author.setFullName("Author1");
-        author.setPersonalInfo("likes dogs");
+        reader.addBook(book);
 
-        book.addAuthor(author);
-
-        assertEquals(1, book.getAuthors().size());
-        assertEquals(1, author.getBooks().size());
+        assertEquals(1, reader.getBooks().size());
+        assertEquals(reader.getId(), book.getReader().getId());
     }
+
+
+
 }

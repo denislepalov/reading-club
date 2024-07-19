@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.integration.servlet;
+package ru.aston.lepd.readingclub.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
@@ -8,9 +8,9 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import ru.aston.lepd.readingclub.dao.BookDao;
-import ru.aston.lepd.readingclub.dto.BookDto;
-import ru.aston.lepd.readingclub.integration.IntegrationTestBase;
+import ru.aston.lepd.readingclub.dao.ReaderDao;
+import ru.aston.lepd.readingclub.dto.ReaderDto;
+import ru.aston.lepd.readingclub.util.IntegrationTestBase;
 import ru.aston.lepd.readingclub.util.ObjectContainerStatic;
 
 import java.util.Collections;
@@ -22,19 +22,18 @@ import static org.hamcrest.Matchers.equalTo;
 import static ru.aston.lepd.readingclub.util.Constants.*;
 
 
-class BookServletIT extends IntegrationTestBase {
-
+class ReaderServletIntegrationTest extends IntegrationTestBase {
 
     private static Server server;
     private static ObjectMapper objectMapper = ObjectContainerStatic.getObjectMapper();
-    private static BookDao bookDao = ObjectContainerStatic.getBookDao();
+    private static ReaderDao readerDao = ObjectContainerStatic.getReaderDao();
     private static final String TEXT_PLAIN = "text/plain;charset=iso-8859-1";
     private static final String APPLICATION_JSON = "application/json";
-    private static final String ID_ERROR = "ERROR: book ID is required";
+    private static final String ID_ERROR = "ERROR: reader ID is required";
     private static final String URL_ERROR = "ERROR: wrong URL";
-    private static final String UPDATING_RESULT = "Result of updating book: ";
-    private static final String DELETING_RESULT = "Result of deleting book: ";
-    private static final String NOT_FOUNT_STRING = "There is no book with id=666 in database";
+    private static final String UPDATING_RESULT = "Result of updating reader: ";
+    private static final String DELETING_RESULT = "Result of deleting reader: ";
+    private static final String NOT_FOUNT_STRING = "There is no reader with id=666 in database";
 
 
     @BeforeAll
@@ -43,7 +42,7 @@ class BookServletIT extends IntegrationTestBase {
         ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
         context.setContextPath("/");
         server.setHandler(context);
-        context.addServlet(new ServletHolder(ObjectContainerStatic.getBookServlet()), "/books/*");
+        context.addServlet(new ServletHolder(ObjectContainerStatic.getReaderServlet()), "/readers/*");
         server.start();
     }
 
@@ -53,61 +52,9 @@ class BookServletIT extends IntegrationTestBase {
 
 
     @Test
-    void doGet_whenExistByReaderId_thenReturnList() throws Exception {
-        final String url = "http://localhost:8080/books?reader-id=1";
-        final String expectedBody = objectMapper.writeValueAsString(List.of(BOOK_DTO_1));
-        given()
-                .when()
-                .get(url)
-                .then()
-                .statusCode(200)
-                .header("Content-Type", equalTo(APPLICATION_JSON))
-                .body(equalTo(expectedBody));
-    }
-
-    @Test
-    void doGet_whenNotExistByReaderId_thenReturnEmptyList() throws Exception {
-        final String url = "http://localhost:8080/books?reader-id=666";
-        final String expectedBody = objectMapper.writeValueAsString(Collections.emptyList());
-        given()
-                .when()
-                .get(url)
-                .then()
-                .statusCode(200)
-                .header("Content-Type", equalTo(APPLICATION_JSON))
-                .body(equalTo(expectedBody));
-    }
-
-    @Test
-    void doGet_whenExistByAuthorId_thenReturnList() throws Exception {
-        final String url = "http://localhost:8080/books?author-id=3";
-        final String expectedBody = objectMapper.writeValueAsString(List.of(BOOK_DTO_1, BOOK_DTO_3));
-        given()
-                .when()
-                .get(url)
-                .then()
-                .statusCode(200)
-                .header("Content-Type", equalTo(APPLICATION_JSON))
-                .body(equalTo(expectedBody));
-    }
-
-    @Test
-    void doGet_whenNotExistByAuthorId_thenReturnEmptyList() throws Exception {
-        final String url = "http://localhost:8080/books?author-id=666";
-        final String expectedBody = objectMapper.writeValueAsString(Collections.emptyList());
-        given()
-                .when()
-                .get(url)
-                .then()
-                .statusCode(200)
-                .header("Content-Type", equalTo(APPLICATION_JSON))
-                .body(equalTo(expectedBody));
-    }
-
-    @Test
     void doGet_whenExist_thenReturnList() throws Exception {
-        final String url = "http://localhost:8080/books";
-        final String expectedBody = objectMapper.writeValueAsString(List.of(BOOK_DTO_1, BOOK_DTO_2, BOOK_DTO_3));
+        final String url = "http://localhost:8080/readers";
+        final String expectedBody = objectMapper.writeValueAsString(List.of(READER_DTO_1, READER_DTO_2, READER_DTO_3));
         given()
                 .when()
                 .get(url)
@@ -119,8 +66,8 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doGet_whenExist2_thenReturnList() throws Exception {
-        final String url = "http://localhost:8080/books/";
-        final String expectedBody = objectMapper.writeValueAsString(List.of(BOOK_DTO_1, BOOK_DTO_2, BOOK_DTO_3));
+        final String url = "http://localhost:8080/readers/";
+        final String expectedBody = objectMapper.writeValueAsString(List.of(READER_DTO_1, READER_DTO_2, READER_DTO_3));
         given()
                 .when()
                 .get(url)
@@ -132,11 +79,11 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doGet_whenNotExist_thenReturnEmptyList() throws Exception {
-        final String url = "http://localhost:8080/books";
+        final String url = "http://localhost:8080/readers";
         final String expectedBody = objectMapper.writeValueAsString(Collections.emptyList());
-        bookDao.delete(1L);
-        bookDao.delete(2L);
-        bookDao.delete(3L);
+        readerDao.delete(1L);
+        readerDao.delete(2L);
+        readerDao.delete(3L);
         given()
                 .when()
                 .get(url)
@@ -147,9 +94,9 @@ class BookServletIT extends IntegrationTestBase {
     }
 
     @Test
-    void doGet_whenValidId_thenBookDto() throws Exception {
-        final String url = "http://localhost:8080/books/1";
-        final String expectedBody = objectMapper.writeValueAsString(BOOK_DTO_1);
+    void doGet_whenValidId_thenReaderDto() throws Exception {
+        final String url = "http://localhost:8080/readers/1";
+        final String expectedBody = objectMapper.writeValueAsString(READER_DTO_1);
         given()
                 .when()
                 .get(url)
@@ -161,7 +108,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doGet_whenInvalidId_thenNotFoundString() throws Exception {
-        final String url = "http://localhost:8080/books/666";
+        final String url = "http://localhost:8080/readers/666";
         given()
                 .when()
                 .get(url)
@@ -173,7 +120,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doGet_ShouldInternalError() throws Exception {
-        final String url = "http://localhost:8080/books/wrong";
+        final String url = "http://localhost:8080/readers/wrong";
         given()
                 .when()
                 .get(url)
@@ -186,12 +133,13 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPost_whenValidJson_thenBookDto() throws Exception {
-        final String url = "http://localhost:8080/books";
-        BookDto bookDto = new BookDto();
-        bookDto.setTitle("Title");
-        bookDto.setInventoryNumber(55555L);
-        bookDto.setReaderId(1L);
-        final String body = objectMapper.writeValueAsString(bookDto);
+        final String url = "http://localhost:8080/readers";
+        ReaderDto readerDto = new ReaderDto();
+        readerDto.setName("Petr");
+        readerDto.setSurname("Ivanov");
+        readerDto.setPhone("75555555555");
+        readerDto.setAddress("Lenina 11");
+        final String body = objectMapper.writeValueAsString(readerDto);
         given()
                 .contentType(JSON)
                 .body(body)
@@ -205,12 +153,13 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPost_whenValidJson2_thenBookDto() throws Exception {
-        final String url = "http://localhost:8080/books/";
-        BookDto bookDto = new BookDto();
-        bookDto.setTitle("Title");
-        bookDto.setInventoryNumber(55555L);
-        bookDto.setReaderId(1L);
-        final String body = objectMapper.writeValueAsString(bookDto);
+        final String url = "http://localhost:8080/readers/";
+        ReaderDto readerDto = new ReaderDto();
+        readerDto.setName("Petr");
+        readerDto.setSurname("Ivanov");
+        readerDto.setPhone("75555555555");
+        readerDto.setAddress("Lenina 11");
+        final String body = objectMapper.writeValueAsString(readerDto);
         given()
                 .contentType(JSON)
                 .body(body)
@@ -224,8 +173,8 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPost_whenInvalidJson_thenJsonError() throws Exception {
-        final String url = "http://localhost:8080/books";
-        final String body = objectMapper.writeValueAsString(READER_DTO_1);
+        final String url = "http://localhost:8080/readers";
+        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
         given()
                 .contentType(JSON)
                 .body(body)
@@ -238,10 +187,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPost_whenConstraintViolation_thenDaoError() throws Exception {
-        final String url = "http://localhost:8080/books";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .post(url)
@@ -252,8 +201,8 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPost_whenWrongUrl_thenUrlErrorString() throws Exception {
-        final String url = "http://localhost:8080/books/wrong";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers/wrong";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
                 .contentType(ContentType.JSON)
                 .body(body)
@@ -269,10 +218,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_whenValidJson_thenSuccessString() throws Exception {
-        final String url = "http://localhost:8080/books/1";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers/1";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .put(url)
@@ -284,10 +233,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_whenInvalidJson_thenJsonError() throws Exception {
-        final String url = "http://localhost:8080/books/1";
-        final String body = objectMapper.writeValueAsString(READER_DTO_1);
+        final String url = "http://localhost:8080/readers/1";
+        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .put(url)
@@ -298,10 +247,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_whenInvalidId_thenNotFoundString() throws Exception {
-        final String url = "http://localhost:8080/books/666";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers/666";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .put(url)
@@ -313,10 +262,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_whenConstraintViolation_thenDaoError() throws Exception {
-        final String url = "http://localhost:8080/books/2";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers/2";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .put(url)
@@ -327,10 +276,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_whenEmptyId_thenIdErrorString() throws Exception {
-        final String url = "http://localhost:8080/books";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .put(url)
@@ -342,10 +291,10 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_whenEmptyId2_thenIdErrorString() throws Exception {
-        final String url = "http://localhost:8080/books/";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers/";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
-                .contentType(ContentType.JSON)
+                .contentType(JSON)
                 .body(body)
                 .when()
                 .put(url)
@@ -357,8 +306,8 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doPut_ShouldInternalError() throws Exception {
-        final String url = "http://localhost:8080/books/wrong";
-        final String body = objectMapper.writeValueAsString(BOOK_DTO_1);
+        final String url = "http://localhost:8080/readers/wrong";
+        final String body = objectMapper.writeValueAsString(READER_DTO_1);
         given()
                 .contentType(ContentType.JSON)
                 .body(body)
@@ -373,7 +322,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doDelete_whenValidId_thenSuccessString() throws Exception {
-        final String url = "http://localhost:8080/books/1";
+        final String url = "http://localhost:8080/readers/1";
         given()
                 .when()
                 .delete(url)
@@ -385,7 +334,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doDelete_whenInvalidId_thenNotFoundString() throws Exception {
-        final String url = "http://localhost:8080/books/666";
+        final String url = "http://localhost:8080/readers/666";
         given()
                 .when()
                 .delete(url)
@@ -397,7 +346,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doDelete_whenEmptyId_thenIdErrorString() throws Exception {
-        final String url = "http://localhost:8080/books";
+        final String url = "http://localhost:8080/readers";
         given()
                 .when()
                 .delete(url)
@@ -409,7 +358,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doDelete_whenEmptyId2_thenIdErrorString() throws Exception {
-        final String url = "http://localhost:8080/books/";
+        final String url = "http://localhost:8080/readers/";
         given()
                 .when()
                 .delete(url)
@@ -421,7 +370,7 @@ class BookServletIT extends IntegrationTestBase {
 
     @Test
     void doDelete_ShouldInternalError() throws Exception {
-        final String url = "http://localhost:8080/books/wrong";
+        final String url = "http://localhost:8080/readers/wrong";
         given()
                 .when()
                 .delete(url)

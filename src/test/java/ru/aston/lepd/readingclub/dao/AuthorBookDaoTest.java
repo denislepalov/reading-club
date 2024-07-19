@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.unit.dao;
+package ru.aston.lepd.readingclub.dao;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

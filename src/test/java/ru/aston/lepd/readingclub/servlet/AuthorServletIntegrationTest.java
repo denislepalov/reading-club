@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.integration.servlet;
+package ru.aston.lepd.readingclub.servlet;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.http.ContentType;
@@ -12,7 +12,7 @@ import ru.aston.lepd.readingclub.dto.AuthorDto;
 import ru.aston.lepd.readingclub.servlet.AuthorServlet;
 import ru.aston.lepd.readingclub.util.ObjectContainerStatic;
 import ru.aston.lepd.readingclub.dao.AuthorDao;
-import ru.aston.lepd.readingclub.integration.IntegrationTestBase;
+import ru.aston.lepd.readingclub.util.IntegrationTestBase;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,7 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static ru.aston.lepd.readingclub.util.Constants.*;
 
 
-class AuthorServletIT extends IntegrationTestBase {
+class AuthorServletIntegrationTest extends IntegrationTestBase {
 
     private static Server server;
     private static ObjectMapper objectMapper = ObjectContainerStatic.getObjectMapper();

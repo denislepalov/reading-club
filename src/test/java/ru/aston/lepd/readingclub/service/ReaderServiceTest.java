@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.unit.service;
+package ru.aston.lepd.readingclub.service;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

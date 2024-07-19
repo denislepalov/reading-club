@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.unit.entity;
+package ru.aston.lepd.readingclub.entity;
 
 import org.junit.jupiter.api.Test;
 import ru.aston.lepd.readingclub.entity.Author;

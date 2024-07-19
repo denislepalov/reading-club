@@ -1,14 +1,12 @@
-package ru.aston.lepd.readingclub.integration.dao;
+package ru.aston.lepd.readingclub.dao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import ru.aston.lepd.readingclub.dao.BookDao;
-import ru.aston.lepd.readingclub.dao.ReaderDao;
 import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 import ru.aston.lepd.readingclub.exception.DaoException;
-import ru.aston.lepd.readingclub.integration.IntegrationTestBase;
+import ru.aston.lepd.readingclub.util.IntegrationTestBase;
 import ru.aston.lepd.readingclub.util.ObjectContainer;
 
 import java.util.List;
@@ -16,7 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReaderDaoIT extends IntegrationTestBase {
+class ReaderDaoIntegrationTest extends IntegrationTestBase {
 
 
     private ReaderDao readerDao;

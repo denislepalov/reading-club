@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.integration;
+package ru.aston.lepd.readingclub.util;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -6,8 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import ru.aston.lepd.readingclub.util.DataSource;
-import ru.aston.lepd.readingclub.util.PropertiesUtil;
 
 import java.sql.Connection;
 import java.sql.SQLException;
