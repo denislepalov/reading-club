@@ -1,8 +1,6 @@
 package ru.aston.lepd.readingclub.entity;
 
 import org.junit.jupiter.api.Test;
-import ru.aston.lepd.readingclub.entity.Book;
-import ru.aston.lepd.readingclub.entity.Reader;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

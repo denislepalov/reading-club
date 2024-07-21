@@ -76,7 +76,7 @@ public class ReaderServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String result = "";
+        String result;
         try (BufferedReader bufferedReader = request.getReader();
              Stream<String> lines = bufferedReader.lines()) {
 

@@ -10,6 +10,7 @@ import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Mapper
@@ -47,17 +48,24 @@ public interface CustomMapper {
     Book bookDtoToBook(BookDto bookDto);
 
     default List<Author> mapAuthorIds(List<Long> authorIds) {
-        return authorIds.stream()
-                .map(id -> {
-                    Author author = new Author();
-                    author.setId(id);
-                    return author;
-                }).toList();
+        List<Author> authors = new ArrayList<>();
+        if (authorIds != null) {
+            authors = authorIds.stream()
+                    .map(id -> {
+                        Author author = new Author();
+                        author.setId(id);
+                        return author;
+                    }).toList();
+        }
+        return authors;
     }
 
     default Reader mapReaderId(Long readerId) {
-        Reader reader = new Reader();
-        reader.setId(readerId);
+        Reader reader = null;
+        if (readerId != null) {
+            reader = new Reader();
+            reader.setId(readerId);
+        }
         return reader;
     }
 

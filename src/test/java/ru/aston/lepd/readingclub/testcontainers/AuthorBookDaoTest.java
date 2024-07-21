@@ -1,13 +1,16 @@
-package ru.aston.lepd.readingclub.dao;
+package ru.aston.lepd.readingclub.testcontainers;
 
 import org.junit.jupiter.api.Test;
+import ru.aston.lepd.readingclub.dao.AuthorBookDao;
 import ru.aston.lepd.readingclub.exception.DaoException;
-import ru.aston.lepd.readingclub.util.IntegrationTestBase;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 
-class AuthorBookDaoIntegrationTest extends IntegrationTestBase {
+/**
+ * PostgreSQLContainer is created in  base class ContainerBase
+ */
+class AuthorBookDaoTest extends ContainerBase {
 
 
     private final AuthorBookDao authorBookDao = new AuthorBookDao();

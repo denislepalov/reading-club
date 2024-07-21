@@ -49,6 +49,9 @@ public class AppInitializer implements ServletContextListener {
         BookService bookService = new BookService(bookDao, mapper);
         AuthorService authorService = new AuthorService(authorDao, mapper);
 
+        bookService.setAuthorService(authorService);
+        bookService.setReaderService(readerService);
+
         ObjectMapper objectMapper = new ObjectMapper();
         ReaderServlet readerServlet = new ReaderServlet(readerService, objectMapper);
         BookServlet bookServlet = new BookServlet(bookService, objectMapper);

@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.util;
+package ru.aston.lepd.readingclub.testcontainers;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -6,13 +6,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import ru.aston.lepd.readingclub.util.DataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
 @Testcontainers
-public abstract class IntegrationTestBase {
+public abstract class ContainerBase {
 
     @Container
     static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");

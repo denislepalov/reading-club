@@ -91,7 +91,7 @@ public class BookServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String result = "";
+        String result ;
         try (BufferedReader bufferedReader = request.getReader();
              Stream<String> lines = bufferedReader.lines()) {
 
@@ -99,7 +99,6 @@ public class BookServlet extends HttpServlet {
             lines.forEach(body::append);
             BookDto bookDto = objectMapper.readValue(body.toString(), BookDto.class);
             String pathInfo = request.getPathInfo();
-
             if (pathInfo == null || pathInfo.equals("/")) {
                 BookDto savedBook = bookService.save(bookDto);
                 result = objectMapper.writeValueAsString(savedBook);

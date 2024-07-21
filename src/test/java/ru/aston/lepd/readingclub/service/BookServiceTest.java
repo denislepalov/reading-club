@@ -1,5 +1,6 @@
 package ru.aston.lepd.readingclub.service;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,10 +12,8 @@ import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 import ru.aston.lepd.readingclub.exception.NotFoundException;
-import ru.aston.lepd.readingclub.service.BookService;
 import ru.aston.lepd.readingclub.util.CustomMapper;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +21,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static ru.aston.lepd.readingclub.util.Constants.*;
+import static ru.aston.lepd.readingclub.Constants.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -33,34 +32,27 @@ class BookServiceTest {
     private BookDao bookDao;
     @Mock
     private CustomMapper mapper;
+    @Mock
+    private AuthorService authorService;
+    @Mock
+    private ReaderService readerService;
     @InjectMocks
     private BookService bookService;
 
 
-
-    private Book getBook() {
-        Reader reader = new Reader();
-        reader.setId(1L);
-        Author author1 = new Author();
-        author1.setId(1L);
-        Author author3 = new Author();
-        author3.setId(3L);
-        Book book = new Book();
-        book.setId(1L);
-        book.setTitle("Title1");
-        book.setInventoryNumber(11111L);
-        book.setAuthors(new ArrayList<>(List.of(author1, author3)));
-        book.setReader(reader);
-        return book;
+    @BeforeEach
+    void setUp() {
+        bookService.setAuthorService(authorService);
+        bookService.setReaderService(readerService);
     }
+
 
 
     @Test
     public void getById_whenValidId_thenReturnBookDto() {
         final Long bookId = 1L;
-        final Book book = getBook();
-        doReturn(Optional.of(book)).when(bookDao).findById(bookId);
-        doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
+        doReturn(Optional.of(BOOK_1)).when(bookDao).findById(bookId);
+        doReturn(BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
         doReturn(BOOK_DTO_1).when(mapper).bookToBookDto(any(Book.class));
 
         BookDto actualResult = bookService.getById(bookId);
@@ -88,15 +80,14 @@ class BookServiceTest {
     @Test
     public void getBookById_whenValidId_thenReturnBook() {
         final Long bookId = 1L;
-        final Book book = getBook();
-        doReturn(Optional.of(book)).when(bookDao).findById(bookId);
-        doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
+        doReturn(Optional.of(BOOK_1)).when(bookDao).findById(bookId);
+        doReturn(BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
 
         Book actualResult = bookService.getBookById(bookId);
 
         verify(bookDao).findById(bookId);
         verify(bookDao).getAuthorsForBook(bookId);
-        assertEquals(FULL_BOOK_1.getId(), actualResult.getId());
+        assertEquals(BOOK_1.getId(), actualResult.getId());
     }
 
     @Test
@@ -115,7 +106,7 @@ class BookServiceTest {
     @Test
     public void getAll_whenExist_thenReturnList() {
         doReturn(List.of(SHORT_BOOK_1, SHORT_BOOK_2, SHORT_BOOK_3)).when(bookDao).findAll();
-        doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(anyLong());
+        doReturn(BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(anyLong());
         doReturn(BOOK_DTO_1).when(mapper).bookToBookDto(any(Book.class));
 
         List<BookDto> actualResult = bookService.getAll();
@@ -205,6 +196,7 @@ class BookServiceTest {
 
     @Test
     public void save() {
+        final Long expectedInventoryNumber = 22222L;
         final Reader reader = new Reader();
         reader.setId(2L);
         final Author author = new Author();
@@ -215,15 +207,19 @@ class BookServiceTest {
         book.setAuthors(List.of(author));
         book.setReader(reader);
         doReturn(book).when(mapper).bookDtoToBook(BOOK_DTO_2);
-        doReturn(FULL_BOOK_2).when(bookDao).save(book);
-        doReturn(BOOK_DTO_2).when(mapper).bookToBookDto(FULL_BOOK_2);
+        doReturn(true).when(authorService).isContainById(anyLong());
+        doReturn(true).when(readerService).isContainById(anyLong());
+        doReturn(BOOK_2).when(bookDao).save(book);
+        doReturn(BOOK_DTO_2).when(mapper).bookToBookDto(BOOK_2);
 
         BookDto actualResult = bookService.save(BOOK_DTO_2);
 
         verify(mapper).bookDtoToBook(BOOK_DTO_2);
+        verify(authorService).isContainById(anyLong());
+        verify(readerService).isContainById(anyLong());
         verify(bookDao).save(book);
-        verify(mapper).bookToBookDto(FULL_BOOK_2);
-        assertEquals(BOOK_DTO_2, actualResult);
+        verify(mapper).bookToBookDto(BOOK_2);
+        assertEquals(expectedInventoryNumber, actualResult.getInventoryNumber());
     }
 
 
@@ -231,17 +227,40 @@ class BookServiceTest {
     @Test
     public void update_whenValidId_thenSuccess() {
         final Long bookId = 1L;
-        final Book book = getBook();
-        doReturn(Optional.of(book)).when(bookDao).findById(bookId);
-        doReturn(FULL_BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
-        doReturn(true).when(bookDao).update(book);
+        doReturn(Optional.of(BOOK_1)).when(bookDao).findById(bookId);
+        doReturn(BOOK_1).when(mapper).bookDtoToBook(BOOK_DTO_1);
+        doReturn(true).when(authorService).isContainById(anyLong());
+        doReturn(true).when(readerService).isContainById(anyLong());
+        doReturn(BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
+        doReturn(true).when(bookDao).update(BOOK_1);
 
         boolean actualResult = bookService.update(BOOK_DTO_1, bookId);
 
         verify(bookDao).findById(bookId);
+        verify(mapper).bookDtoToBook(BOOK_DTO_1);
+        verify(authorService, times(2)).isContainById(anyLong());
+        verify(readerService).isContainById(anyLong());
         verify(bookDao).getAuthorsForBook(bookId);
-        verify(bookDao).update(book);
-        assertTrue(actualResult);;
+        verify(bookDao).update(BOOK_1);
+        assertTrue(actualResult);
+    }
+
+    @Test
+    public void update_whenValidIdAndAuthorsAreEmpty_thenSuccess() {
+        final Long bookId = 1L;
+        final Book book = new Book();
+        doReturn(Optional.of(BOOK_1)).when(bookDao).findById(bookId);
+        doReturn(book).when(mapper).bookDtoToBook(BOOK_DTO_1);
+        doReturn(BOOK_1.getAuthors()).when(bookDao).getAuthorsForBook(bookId);
+        doReturn(true).when(bookDao).update(BOOK_1);
+
+        boolean actualResult = bookService.update(BOOK_DTO_1, bookId);
+
+        verify(bookDao).findById(bookId);
+        verify(mapper).bookDtoToBook(BOOK_DTO_1);
+        verify(bookDao).getAuthorsForBook(bookId);
+        verify(bookDao).update(BOOK_1);
+        assertTrue(actualResult);
     }
 
     @Test
@@ -253,7 +272,7 @@ class BookServiceTest {
 
         verify(bookDao).findById(bookId);
         verify(bookDao, never()).getAuthorsForBook(bookId);
-        verify(bookDao, never()).update(FULL_BOOK_1);
+        verify(bookDao, never()).update(BOOK_1);
     }
 
 

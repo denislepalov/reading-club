@@ -10,17 +10,15 @@ import ru.aston.lepd.readingclub.dto.AuthorDto;
 import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.exception.NotFoundException;
-import ru.aston.lepd.readingclub.service.AuthorService;
 import ru.aston.lepd.readingclub.util.CustomMapper;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static ru.aston.lepd.readingclub.util.Constants.*;
+import static ru.aston.lepd.readingclub.Constants.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +48,7 @@ public class AuthorServiceTest {
         final Long authorId = 1L;
         final Author author = getAuthor();
         doReturn(Optional.of(author)).when(authorDao).findById(authorId);
-        doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
+        doReturn(AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
         doReturn(AUTHOR_DTO_1).when(mapper).authorToAuthorDto(any(Author.class));
 
         AuthorDto actualResult = authorService.getById(authorId);
@@ -80,13 +78,13 @@ public class AuthorServiceTest {
         final Long authorId = 1L;
         final Author author = getAuthor();
         doReturn(Optional.of(author)).when(authorDao).findById(authorId);
-        doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
+        doReturn(AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
 
         Author actualResult = authorService.getAuthorById(authorId);
 
         verify(authorDao).findById(authorId);
         verify(authorDao).getBooksForAuthor(authorId);
-        assertEquals(FULL_AUTHOR_1.getId(), actualResult.getId());
+        assertEquals(AUTHOR_1.getId(), actualResult.getId());
     }
 
     @Test
@@ -105,7 +103,7 @@ public class AuthorServiceTest {
     @Test
     public void getAll_whenExist_thenReturnList() {
         doReturn(List.of(getAuthor(), getAuthor(), getAuthor())).when(authorDao).findAll();
-        doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(anyLong());
+        doReturn(AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(anyLong());
         doReturn(AUTHOR_DTO_1).when(mapper).authorToAuthorDto(any(Author.class));
 
         List<AuthorDto> actualResult = authorService.getAll();
@@ -155,7 +153,7 @@ public class AuthorServiceTest {
         final Long authorId = 1L;
         final Author author = getAuthor();
         doReturn(Optional.of(author)).when(authorDao).findById(authorId);
-        doReturn(FULL_AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
+        doReturn(AUTHOR_1.getBooks()).when(authorDao).getBooksForAuthor(authorId);
         doReturn(true).when(authorDao).update(author);
 
         boolean actualResult = authorService.update(AUTHOR_DTO_1, authorId);
@@ -175,7 +173,7 @@ public class AuthorServiceTest {
 
         verify(authorDao).findById(authorId);
         verify(authorDao, never()).getBooksForAuthor(authorId);
-        verify(authorDao, never()).update(FULL_AUTHOR_1);
+        verify(authorDao, never()).update(AUTHOR_1);
     }
 
 

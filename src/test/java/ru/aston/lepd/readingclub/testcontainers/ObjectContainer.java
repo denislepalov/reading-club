@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.util;
+package ru.aston.lepd.readingclub.testcontainers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.aston.lepd.readingclub.dao.AuthorBookDao;
@@ -11,6 +11,7 @@ import ru.aston.lepd.readingclub.service.ReaderService;
 import ru.aston.lepd.readingclub.servlet.AuthorServlet;
 import ru.aston.lepd.readingclub.servlet.BookServlet;
 import ru.aston.lepd.readingclub.servlet.ReaderServlet;
+import ru.aston.lepd.readingclub.util.CustomMapper;
 
 public class ObjectContainer {
 
@@ -30,6 +31,11 @@ public class ObjectContainer {
     ReaderService readerService = new ReaderService(readerDao, mapper);
     BookService bookService = new BookService(bookDao, mapper);
     AuthorService authorService = new AuthorService(authorDao, mapper);
+
+    {
+        bookService.setAuthorService(authorService);
+        bookService.setReaderService(readerService);
+    }
 
     ObjectMapper objectMapper = new ObjectMapper();
     ReaderServlet readerServlet = new ReaderServlet(readerService, objectMapper);

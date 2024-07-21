@@ -63,7 +63,7 @@ public class ReaderDao implements Dao<Long, Reader> {
             ResultSet resultSet = preparedStatement.executeQuery();
             Reader reader = null;
             if (resultSet.next()) {
-                reader = buildReader(resultSet, connection);
+                reader = buildReader(resultSet);
             }
             return Optional.ofNullable(reader);
 
@@ -81,7 +81,7 @@ public class ReaderDao implements Dao<Long, Reader> {
             ResultSet resultSet = preparedStatement.executeQuery();
             List<Reader> readers = new ArrayList<>();
             while (resultSet.next()) {
-                readers.add(buildReader(resultSet, connection));
+                readers.add(buildReader(resultSet));
             }
             return readers;
 
@@ -91,7 +91,7 @@ public class ReaderDao implements Dao<Long, Reader> {
     }
 
 
-    private Reader buildReader(ResultSet resultSet, Connection connection) throws SQLException {
+    private Reader buildReader(ResultSet resultSet) throws SQLException {
         Reader reader = new Reader();
         reader.setId(resultSet.getLong("id"));
         reader.setName(resultSet.getString("name"));

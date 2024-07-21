@@ -1,6 +1,6 @@
 package ru.aston.lepd.readingclub.dao;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -14,8 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -23,6 +22,7 @@ import static org.mockito.Mockito.*;
 class AuthorBookDaoTest {
 
 
+    private static MockedStatic<DataSource> dataSource;
     @Mock
     private Connection connection;
     @Mock
@@ -32,106 +32,220 @@ class AuthorBookDaoTest {
 
 
 
+    @BeforeAll
+    static void setUp() {
+        dataSource = mockStatic(DataSource.class);
+    }
+
+    @BeforeEach
+    void init() throws SQLException {
+        dataSource.when(DataSource::getConnection).thenReturn(connection);
+        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
+    }
+
+
+
 
 
     @Test
-    void save_shouldReturnFalse() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doReturn(0).when(preparedStatement).executeUpdate();
-        doNothing().when(preparedStatement).setLong(1, 1L);
-        doNothing().when(preparedStatement).setLong(2, 2L);
-        boolean actualResult;
+    void save_whenValidData_thenTrue() throws SQLException {
+        final Long authorId = 1L;
+        final Long bookId = 1L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doNothing().when(preparedStatement).setLong(2, bookId);
+        doReturn(1).when(preparedStatement).executeUpdate();
 
-        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
-            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
-            actualResult = authorBookDao.save(1L, 2L);
-            dataSourceMock.verify(DataSource::getConnection);
-        }
+        boolean actualResult = authorBookDao.save(authorId, bookId);
 
         verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, 1L);
-        verify(preparedStatement).setLong(2, 2L);
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).setLong(2, bookId);
+        assertTrue(actualResult);
+    }
+
+    @Test
+    void save_whenInvalidData_thenReturnFalse() throws SQLException {
+        final Long authorId = 666L;
+        final Long bookId = 666L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doNothing().when(preparedStatement).setLong(2, bookId);
+        doReturn(0).when(preparedStatement).executeUpdate();
+
+        boolean actualResult = authorBookDao.save(authorId, bookId);
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).setLong(2, bookId);
         verify(preparedStatement).executeUpdate();
         assertFalse(actualResult);
     }
 
     @Test
-    void save_shouldTrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
+    void save_whenError_ThrowException() throws SQLException {
+        final Long authorId = 3L;
+        final Long bookId = 3L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doNothing().when(preparedStatement).setLong(2, bookId);
         doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-        doNothing().when(preparedStatement).setLong(1, 1L);
-        doNothing().when(preparedStatement).setLong(2, 2L);
 
-        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
-            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
-            assertThrows(DaoException.class, () -> authorBookDao.save(1L, 2L));
-            dataSourceMock.verify(DataSource::getConnection);
-        }
+        assertThrows(DaoException.class, () -> authorBookDao.save(authorId, bookId));
 
         verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, 1L);
-        verify(preparedStatement).setLong(2, 2L);
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).setLong(2, bookId);
         verify(preparedStatement).executeUpdate();
     }
 
 
 
     @Test
-    void deleteAllByAuthorId_shouldThrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-        doNothing().when(preparedStatement).setLong(1, 1L);
+    void deleteAllByAuthorId_whenValidData_thenReturnTrue() throws SQLException {
+        final Long authorId = 1L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doReturn(1).when(preparedStatement).executeUpdate();
 
-        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
-            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
-            assertThrows(DaoException.class, () -> authorBookDao.deleteAllByAuthorId(1L));
-            dataSourceMock.verify(DataSource::getConnection);
-        }
+        boolean actualResult = authorBookDao.deleteAllByAuthorId(authorId);
 
         verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, 1L);
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).executeUpdate();
+        assertTrue(actualResult);
+    }
+
+    @Test
+    void deleteAllByAuthorId_whenInvalidData_thenReturnFalse() throws SQLException {
+        final Long authorId = 666L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doReturn(0).when(preparedStatement).executeUpdate();
+
+        boolean actualResult = authorBookDao.deleteAllByAuthorId(authorId);
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).executeUpdate();
+        assertFalse(actualResult);
+    }
+
+
+    @Test
+    void deleteAllByAuthorId_whenError_ThrowException() throws SQLException {
+        final Long authorId = 3L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
+
+        assertThrows(DaoException.class, () -> authorBookDao.deleteAllByAuthorId(authorId));
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, authorId);
         verify(preparedStatement).executeUpdate();
     }
 
 
 
     @Test
-    void deleteAllByBookId_shouldThrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-        doNothing().when(preparedStatement).setLong(1, 1L);
+    void deleteAllByBookId_whenValidData_thenReturnTrue() throws SQLException {
+        final Long bookId = 1L;
+        doNothing().when(preparedStatement).setLong(1, bookId);
+        doReturn(1).when(preparedStatement).executeUpdate();
 
-        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
-            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
-            assertThrows(DaoException.class, () -> authorBookDao.deleteAllByBookId(1L));
-            dataSourceMock.verify(DataSource::getConnection);
-        }
+        boolean actualResult = authorBookDao.deleteAllByBookId(bookId);
 
         verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, 1L);
+        verify(preparedStatement).setLong(1, bookId);
         verify(preparedStatement).executeUpdate();
+        assertTrue(actualResult);
+    }
+
+    @Test
+    void deleteAllByBookId_whenInvalidData_thenReturnFalse() throws SQLException {
+        final Long bookId = 666L;
+        doNothing().when(preparedStatement).setLong(1, bookId);
+        doReturn(0).when(preparedStatement).executeUpdate();
+
+        boolean actualResult = authorBookDao.deleteAllByBookId(bookId);
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, bookId);
+        verify(preparedStatement).executeUpdate();
+        assertFalse(actualResult);
     }
 
 
     @Test
-    void delete_shouldTrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
+    void deleteAllByBookId_whenError_ThrowException() throws SQLException {
+        final Long bookId = 3L;
+        doNothing().when(preparedStatement).setLong(1, bookId);
         doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-        doNothing().when(preparedStatement).setLong(1, 1L);
-        doNothing().when(preparedStatement).setLong(2, 2L);
 
-        try (MockedStatic<DataSource> dataSourceMock = mockStatic(DataSource.class)) {
-            dataSourceMock.when(DataSource::getConnection).thenReturn(connection);
-            assertThrows(DaoException.class, () -> authorBookDao.delete(1L, 2L));
-            dataSourceMock.verify(DataSource::getConnection);
-        }
+        assertThrows(DaoException.class, () -> authorBookDao.deleteAllByBookId(bookId));
 
         verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, 1L);
-        verify(preparedStatement).setLong(2, 2L);
+        verify(preparedStatement).setLong(1, bookId);
         verify(preparedStatement).executeUpdate();
     }
 
 
+
+    @Test
+    void delete_whenValidData_thenReturnTrue() throws SQLException {
+        final Long authorId = 1L;
+        final Long bookId = 1L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doNothing().when(preparedStatement).setLong(2, bookId);
+        doReturn(1).when(preparedStatement).executeUpdate();
+
+        boolean actualResult = authorBookDao.delete(authorId, bookId);
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).setLong(2, bookId);
+        verify(preparedStatement).executeUpdate();
+        assertTrue(actualResult);
+    }
+
+    @Test
+    void delete_whenInvalidData_thenReturnFalse() throws SQLException {
+        final Long authorId = 666L;
+        final Long bookId = 666L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doNothing().when(preparedStatement).setLong(2, bookId);
+        doReturn(0).when(preparedStatement).executeUpdate();
+
+        boolean actualResult = authorBookDao.delete(authorId, bookId);
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).setLong(1, bookId);
+        verify(preparedStatement).executeUpdate();
+        assertFalse(actualResult);
+    }
+
+    @Test
+    void delete_whenError_ThrowException() throws SQLException {
+        final Long authorId = 3L;
+        final Long bookId = 3L;
+        doNothing().when(preparedStatement).setLong(1, authorId);
+        doNothing().when(preparedStatement).setLong(2, bookId);
+        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
+
+        assertThrows(DaoException.class, () -> authorBookDao.delete(authorId, bookId));
+
+        verify(connection).prepareStatement(anyString());
+        verify(preparedStatement).setLong(1, authorId);
+        verify(preparedStatement).setLong(1, bookId);
+        verify(preparedStatement).executeUpdate();
+    }
+
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        preparedStatement.close();
+        connection.close();
+    }
+
+    @AfterAll
+    static void deleteAll() {
+        dataSource.close();
+    }
 
 }

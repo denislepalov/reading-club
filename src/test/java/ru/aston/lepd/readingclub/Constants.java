@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.util;
+package ru.aston.lepd.readingclub;
 
 import ru.aston.lepd.readingclub.dto.AuthorDto;
 import ru.aston.lepd.readingclub.dto.BookDto;
@@ -86,83 +86,83 @@ public class Constants {
 
 
 
-    public static final Reader FULL_READER_1 = new Reader();
+    public static final Reader READER_1 = new Reader();
     static {
-        FULL_READER_1.setId(1L);
-        FULL_READER_1.setName("Ivan");
-        FULL_READER_1.setSurname("Ivanov");
-        FULL_READER_1.setPhone("71111111111");
-        FULL_READER_1.setAddress("Lenina 11");
-        FULL_READER_1.setBooks(List.of(SHORT_BOOK_1));
+        READER_1.setId(1L);
+        READER_1.setName("Ivan");
+        READER_1.setSurname("Ivanov");
+        READER_1.setPhone("71111111111");
+        READER_1.setAddress("Lenina 11");
+        READER_1.setBooks(List.of(SHORT_BOOK_1));
     }
-    public static final Reader FULL_READER_2 = new Reader();
+    public static final Reader READER_2 = new Reader();
     static {
-        FULL_READER_2.setId(2L);
-        FULL_READER_2.setName("Petr");
-        FULL_READER_2.setSurname("Petrov");
-        FULL_READER_2.setPhone("72222222222");
-        FULL_READER_2.setAddress("Lenina 22");
-        FULL_READER_2.setBooks(List.of(SHORT_BOOK_2));
+        READER_2.setId(2L);
+        READER_2.setName("Petr");
+        READER_2.setSurname("Petrov");
+        READER_2.setPhone("72222222222");
+        READER_2.setAddress("Lenina 22");
+        READER_2.setBooks(List.of(SHORT_BOOK_2));
     }
-    public static final Reader FULL_READER_3 = new Reader();
+    public static final Reader READER_3 = new Reader();
     static {
-        FULL_READER_3.setId(3L);
-        FULL_READER_3.setName("Sveta");
-        FULL_READER_3.setSurname("Svetikova");
-        FULL_READER_3.setPhone("73333333333");
-        FULL_READER_3.setAddress("Lenina 33");
-        FULL_READER_3.setBooks(List.of(SHORT_BOOK_3));
-    }
-
-
-
-    public static final Book FULL_BOOK_1 = new Book();
-    static {
-        FULL_BOOK_1.setId(1L);
-        FULL_BOOK_1.setTitle("Title1");
-        FULL_BOOK_1.setInventoryNumber(11111L);
-        FULL_BOOK_1.setAuthors(new ArrayList<>(List.of(SHORT_AUTHOR_1, SHORT_AUTHOR_3)));
-        FULL_BOOK_1.setReader(SHORT_READER_1);
-    }
-    public static final Book FULL_BOOK_2 = new Book();
-    static {
-        FULL_BOOK_2.setId(2L);
-        FULL_BOOK_2.setTitle("Title2");
-        FULL_BOOK_2.setInventoryNumber(22222L);
-        FULL_BOOK_2.setAuthors(new ArrayList<>(List.of(SHORT_AUTHOR_2)));
-        FULL_BOOK_2.setReader(SHORT_READER_2);
-    }
-    public static final Book FULL_BOOK_3 = new Book();
-    static {
-        FULL_BOOK_3.setId(3L);
-        FULL_BOOK_3.setTitle("Title3");
-        FULL_BOOK_3.setInventoryNumber(33333L);
-        FULL_BOOK_3.setAuthors(new ArrayList<>(List.of(SHORT_AUTHOR_2, SHORT_AUTHOR_3)));
-        FULL_BOOK_3.setReader(SHORT_READER_3);
+        READER_3.setId(3L);
+        READER_3.setName("Sveta");
+        READER_3.setSurname("Svetikova");
+        READER_3.setPhone("73333333333");
+        READER_3.setAddress("Lenina 33");
+        READER_3.setBooks(List.of(SHORT_BOOK_3));
     }
 
 
 
-    public static final Author FULL_AUTHOR_1 = new Author();
+    public static final Book BOOK_1 = new Book();
     static {
-        FULL_AUTHOR_1.setId(1L);
-        FULL_AUTHOR_1.setFullName("Author1");
-        FULL_AUTHOR_1.setPersonalInfo("likes dogs");
-        FULL_AUTHOR_1.setBooks(List.of(SHORT_BOOK_1));
+        BOOK_1.setId(1L);
+        BOOK_1.setTitle("Title1");
+        BOOK_1.setInventoryNumber(11111L);
+        BOOK_1.setAuthors(new ArrayList<>(List.of(SHORT_AUTHOR_1, SHORT_AUTHOR_3)));
+        BOOK_1.setReader(SHORT_READER_1);
     }
-    public static final Author FULL_AUTHOR_2 = new Author();
+    public static final Book BOOK_2 = new Book();
     static {
-        FULL_AUTHOR_2.setId(2L);
-        FULL_AUTHOR_2.setFullName("Author2");
-        FULL_AUTHOR_2.setPersonalInfo("likes cats");
-        FULL_AUTHOR_2.setBooks(List.of(SHORT_BOOK_2, SHORT_BOOK_3));
+        BOOK_2.setId(2L);
+        BOOK_2.setTitle("Title2");
+        BOOK_2.setInventoryNumber(22222L);
+        BOOK_2.setAuthors(new ArrayList<>(List.of(SHORT_AUTHOR_2)));
+        BOOK_2.setReader(SHORT_READER_2);
     }
-    public static final Author FULL_AUTHOR_3 = new Author();
+    public static final Book BOOK_3 = new Book();
     static {
-        FULL_AUTHOR_3.setId(3L);
-        FULL_AUTHOR_3.setFullName("Author3");
-        FULL_AUTHOR_3.setPersonalInfo("likes wolfs");
-        FULL_AUTHOR_3.setBooks(List.of(SHORT_BOOK_1, SHORT_BOOK_3));
+        BOOK_3.setId(3L);
+        BOOK_3.setTitle("Title3");
+        BOOK_3.setInventoryNumber(33333L);
+        BOOK_3.setAuthors(new ArrayList<>(List.of(SHORT_AUTHOR_2, SHORT_AUTHOR_3)));
+        BOOK_3.setReader(SHORT_READER_3);
+    }
+
+
+
+    public static final Author AUTHOR_1 = new Author();
+    static {
+        AUTHOR_1.setId(1L);
+        AUTHOR_1.setFullName("Author1");
+        AUTHOR_1.setPersonalInfo("likes dogs");
+        AUTHOR_1.setBooks(List.of(SHORT_BOOK_1));
+    }
+    public static final Author AUTHOR_2 = new Author();
+    static {
+        AUTHOR_2.setId(2L);
+        AUTHOR_2.setFullName("Author2");
+        AUTHOR_2.setPersonalInfo("likes cats");
+        AUTHOR_2.setBooks(List.of(SHORT_BOOK_2, SHORT_BOOK_3));
+    }
+    public static final Author AUTHOR_3 = new Author();
+    static {
+        AUTHOR_3.setId(3L);
+        AUTHOR_3.setFullName("Author3");
+        AUTHOR_3.setPersonalInfo("likes wolfs");
+        AUTHOR_3.setBooks(List.of(SHORT_BOOK_1, SHORT_BOOK_3));
     }
 
 

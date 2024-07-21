@@ -74,7 +74,7 @@ public class AuthorServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        String result = "";
+        String result;
         try (BufferedReader bufferedReader = request.getReader();
              Stream<String> lines = bufferedReader.lines()) {
 
@@ -109,11 +109,11 @@ public class AuthorServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        StringBuilder body = new StringBuilder();
         String result;
         try (BufferedReader bufferedReader = request.getReader();
              Stream<String> lines = bufferedReader.lines()) {
 
+            StringBuilder body = new StringBuilder();
             lines.forEach(body::append);
             AuthorDto authorDto = objectMapper.readValue(body.toString(), AuthorDto.class);
             String pathInfo = request.getPathInfo();

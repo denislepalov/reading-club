@@ -7,14 +7,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.aston.lepd.readingclub.dao.ReaderDao;
 import ru.aston.lepd.readingclub.dto.ReaderDto;
-import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.entity.Reader;
 import ru.aston.lepd.readingclub.exception.NotFoundException;
-import ru.aston.lepd.readingclub.service.ReaderService;
 import ru.aston.lepd.readingclub.util.CustomMapper;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +19,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static ru.aston.lepd.readingclub.util.Constants.*;
+import static ru.aston.lepd.readingclub.Constants.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -48,7 +45,7 @@ class ReaderServiceTest {
         reader.setSurname("Ivanov");
         reader.setPhone("71111111111");
         reader.setAddress("Lenina 11");
-        FULL_READER_1.setBooks(List.of(book1));
+        READER_1.setBooks(List.of(book1));
         return reader;
     }
 
@@ -57,7 +54,7 @@ class ReaderServiceTest {
         final Long readerId = 1L;
         final Reader reader = getReader();
         doReturn(Optional.of(reader)).when(readerDao).findById(readerId);
-        doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
+        doReturn(READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
         doReturn(READER_DTO_1).when(mapper).readerToReaderDto(any(Reader.class));
 
         ReaderDto actualResult = readerService.getById(readerId);
@@ -87,13 +84,13 @@ class ReaderServiceTest {
         final Long readerId = 1L;
         final Reader reader = getReader();
         doReturn(Optional.of(reader)).when(readerDao).findById(readerId);
-        doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
+        doReturn(READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
 
         Reader actualResult = readerService.getReaderById(readerId);
 
         verify(readerDao).findById(readerId);
         verify(readerDao).getBooksForReader(readerId);
-        assertEquals(FULL_READER_1.getId(), actualResult.getId());
+        assertEquals(READER_1.getId(), actualResult.getId());
     }
 
     @Test
@@ -112,7 +109,7 @@ class ReaderServiceTest {
     @Test
     public void getAll_whenExist_thenReturnList() {
         doReturn(List.of(getReader(), getReader(), getReader())).when(readerDao).findAll();
-        doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(anyLong());
+        doReturn(READER_1.getBooks()).when(readerDao).getBooksForReader(anyLong());
         doReturn(READER_DTO_1).when(mapper).readerToReaderDto(any(Reader.class));
 
         List<ReaderDto> actualResult = readerService.getAll();
@@ -164,7 +161,7 @@ class ReaderServiceTest {
         final Long readerId = 1L;
         final Reader author = getReader();
         doReturn(Optional.of(author)).when(readerDao).findById(readerId);
-        doReturn(FULL_READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
+        doReturn(READER_1.getBooks()).when(readerDao).getBooksForReader(readerId);
         doReturn(true).when(readerDao).update(author);
 
         boolean actualResult = readerService.update(READER_DTO_1, readerId);
@@ -184,7 +181,7 @@ class ReaderServiceTest {
 
         verify(readerDao).findById(readerId);
         verify(readerDao, never()).getBooksForReader(readerId);
-        verify(readerDao, never()).update(FULL_READER_1);
+        verify(readerDao, never()).update(READER_1);
     }
 
 
