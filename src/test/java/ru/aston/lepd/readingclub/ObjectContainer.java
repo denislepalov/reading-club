@@ -1,4 +1,4 @@
-package ru.aston.lepd.readingclub.testcontainers;
+package ru.aston.lepd.readingclub;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.aston.lepd.readingclub.dao.AuthorBookDao;

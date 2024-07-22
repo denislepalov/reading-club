@@ -1,251 +1,165 @@
 package ru.aston.lepd.readingclub.dao;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
-import ru.aston.lepd.readingclub.dao.AuthorBookDao;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import ru.aston.lepd.readingclub.Constants;
 import ru.aston.lepd.readingclub.exception.DaoException;
 import ru.aston.lepd.readingclub.util.DataSource;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static ru.aston.lepd.readingclub.Constants.*;
 
-@ExtendWith(MockitoExtension.class)
+
+@Testcontainers
 class AuthorBookDaoTest {
 
+    @Container
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
+    private final AuthorBookDao authorBookDao = new AuthorBookDao();
 
-    private static MockedStatic<DataSource> dataSource;
-    @Mock
-    private Connection connection;
-    @Mock
-    private PreparedStatement preparedStatement;
-    @InjectMocks
-    private AuthorBookDao authorBookDao;
 
 
 
     @BeforeAll
-    static void setUp() {
-        dataSource = mockStatic(DataSource.class);
+    static void prepareDatabase() throws SQLException {
+        postgreSQLContainer.start();
+        DataSource.initialize(postgreSQLContainer.getJdbcUrl(),
+                postgreSQLContainer.getUsername(),
+                postgreSQLContainer.getPassword(),
+                postgreSQLContainer.getDriverClassName());
+
+        try (Connection connection = DataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(CREATE_READERS_SQL);
+            statement.execute(CREATE_BOOKS_SQL);
+            statement.execute(CREATE_AUTHORS_SQL);
+            statement.execute(CREATE_AUTHOR_BOOK_SQL);
+        }
     }
+
 
     @BeforeEach
-    void init() throws SQLException {
-        dataSource.when(DataSource::getConnection).thenReturn(connection);
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
+    void cleanData() throws SQLException {
+        try (var connection = DataSource.getConnection();
+             var statement = connection.createStatement()) {
+            statement.execute(CLEAN_AUTHOR_BOOK_SQL);
+            statement.execute(CLEAN_AUTHORS_SQL);
+            statement.execute(CLEAN_BOOKS_SQL);
+            statement.execute(CLEAN_READERS_SQL);
+
+            statement.execute(UPDATE_AUTHOR_ID_SQL);
+            statement.execute(UPDATE_BOOKS_ID_SQL);
+            statement.execute(UPDATE_READERS_ID_SQL);
+
+            statement.execute(INSERT_READERS_SQL);
+            statement.execute(INSERT_BOOKS_SQL);
+            statement.execute(INSERT_AUTHORS_SQL);
+            statement.execute(INSERT_AUTHOR_BOOK_SQL);
+        }
     }
 
 
 
 
 
+
     @Test
-    void save_whenValidData_thenTrue() throws SQLException {
+    void save_whenValidData_thenTrue() {
         final Long authorId = 1L;
-        final Long bookId = 1L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doNothing().when(preparedStatement).setLong(2, bookId);
-        doReturn(1).when(preparedStatement).executeUpdate();
+        final Long bookId = 3L;
 
         boolean actualResult = authorBookDao.save(authorId, bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).setLong(2, bookId);
         assertTrue(actualResult);
     }
 
     @Test
-    void save_whenInvalidData_thenReturnFalse() throws SQLException {
-        final Long authorId = 666L;
-        final Long bookId = 666L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doNothing().when(preparedStatement).setLong(2, bookId);
-        doReturn(0).when(preparedStatement).executeUpdate();
-
-        boolean actualResult = authorBookDao.save(authorId, bookId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).setLong(2, bookId);
-        verify(preparedStatement).executeUpdate();
-        assertFalse(actualResult);
+    void save_whenPairIsNotUnique_thenTrowException() {
+        assertThrows(DaoException.class, () -> authorBookDao.save(1L, 1L));
     }
 
     @Test
-    void save_whenError_ThrowException() throws SQLException {
-        final Long authorId = 3L;
-        final Long bookId = 3L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doNothing().when(preparedStatement).setLong(2, bookId);
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-
-        assertThrows(DaoException.class, () -> authorBookDao.save(authorId, bookId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).setLong(2, bookId);
-        verify(preparedStatement).executeUpdate();
+    void save_whenColumnIsNotForeignKey_thenTrowException() {
+        final Long wrongAuthorId = 666L;
+        final Long bookId = 1L;
+        assertThrows(DaoException.class, () -> authorBookDao.save(wrongAuthorId, bookId));
     }
 
 
 
     @Test
-    void deleteAllByAuthorId_whenValidData_thenReturnTrue() throws SQLException {
+    void deleteAllByAuthorId_whenExist_thenTrue() {
         final Long authorId = 1L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doReturn(1).when(preparedStatement).executeUpdate();
 
         boolean actualResult = authorBookDao.deleteAllByAuthorId(authorId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).executeUpdate();
         assertTrue(actualResult);
     }
 
     @Test
-    void deleteAllByAuthorId_whenInvalidData_thenReturnFalse() throws SQLException {
+    void deleteAllByAuthorId_whenNotExist_thenFalse() {
         final Long authorId = 666L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doReturn(0).when(preparedStatement).executeUpdate();
 
         boolean actualResult = authorBookDao.deleteAllByAuthorId(authorId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).executeUpdate();
         assertFalse(actualResult);
     }
 
 
-    @Test
-    void deleteAllByAuthorId_whenError_ThrowException() throws SQLException {
-        final Long authorId = 3L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-
-        assertThrows(DaoException.class, () -> authorBookDao.deleteAllByAuthorId(authorId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).executeUpdate();
-    }
-
-
 
     @Test
-    void deleteAllByBookId_whenValidData_thenReturnTrue() throws SQLException {
+    void deleteAllByBookId_whenExist_thenTrue() {
         final Long bookId = 1L;
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(1).when(preparedStatement).executeUpdate();
 
         boolean actualResult = authorBookDao.deleteAllByBookId(bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeUpdate();
         assertTrue(actualResult);
     }
 
     @Test
-    void deleteAllByBookId_whenInvalidData_thenReturnFalse() throws SQLException {
+    void deleteAllByBookId_whenNotExist_thenFalse() {
         final Long bookId = 666L;
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(0).when(preparedStatement).executeUpdate();
 
         boolean actualResult = authorBookDao.deleteAllByBookId(bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeUpdate();
         assertFalse(actualResult);
     }
 
 
-    @Test
-    void deleteAllByBookId_whenError_ThrowException() throws SQLException {
-        final Long bookId = 3L;
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-
-        assertThrows(DaoException.class, () -> authorBookDao.deleteAllByBookId(bookId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeUpdate();
-    }
-
-
 
     @Test
-    void delete_whenValidData_thenReturnTrue() throws SQLException {
+    void delete_whenValidData_thenTrue() {
         final Long authorId = 1L;
         final Long bookId = 1L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doNothing().when(preparedStatement).setLong(2, bookId);
-        doReturn(1).when(preparedStatement).executeUpdate();
-
         boolean actualResult = authorBookDao.delete(authorId, bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).setLong(2, bookId);
-        verify(preparedStatement).executeUpdate();
         assertTrue(actualResult);
     }
 
     @Test
-    void delete_whenInvalidData_thenReturnFalse() throws SQLException {
-        final Long authorId = 666L;
-        final Long bookId = 666L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doNothing().when(preparedStatement).setLong(2, bookId);
-        doReturn(0).when(preparedStatement).executeUpdate();
+    void delete_whenInvalidData_thenFalse() {
+        final Long authorId = 9L;
+        final Long bookId = 9L;
 
         boolean actualResult = authorBookDao.delete(authorId, bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeUpdate();
         assertFalse(actualResult);
     }
 
-    @Test
-    void delete_whenError_ThrowException() throws SQLException {
-        final Long authorId = 3L;
-        final Long bookId = 3L;
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doNothing().when(preparedStatement).setLong(2, bookId);
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
 
-        assertThrows(DaoException.class, () -> authorBookDao.delete(authorId, bookId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeUpdate();
-    }
-
-
-    @AfterEach
-    void tearDown() throws SQLException {
-        preparedStatement.close();
-        connection.close();
-    }
 
     @AfterAll
-    static void deleteAll() {
-        dataSource.close();
+    static void afterAll() throws SQLException {
+        postgreSQLContainer.stop();
     }
 
 }

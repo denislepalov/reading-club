@@ -213,7 +213,6 @@ public class BookDao implements Dao<Long, Book> {
                 }
             }
             return updateResult > 0;
-
         } catch (SQLException e) {
             throw new DaoException(e.getMessage());
         }

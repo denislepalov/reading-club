@@ -1,650 +1,389 @@
 package ru.aston.lepd.readingclub.dao;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import ru.aston.lepd.readingclub.ObjectContainer;
 import ru.aston.lepd.readingclub.entity.Author;
 import ru.aston.lepd.readingclub.entity.Book;
 import ru.aston.lepd.readingclub.exception.DaoException;
 import ru.aston.lepd.readingclub.util.DataSource;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 import static ru.aston.lepd.readingclub.Constants.*;
 
-
-@ExtendWith(MockitoExtension.class)
+@Testcontainers
 class BookDaoTest {
 
 
-    private static MockedStatic<DataSource> dataSource;
-    @Mock
-    private Connection connection;
-    @Mock
-    private ResultSet resultSet;
-    @Mock
-    private PreparedStatement preparedStatement;
-    @Mock
-    private AuthorBookDao authorBookDao;
-    @Mock
-    private AuthorDao authorDao;
-    @Mock
-    private ReaderDao readerDao;
-    @InjectMocks
+    @Container
+    static PostgreSQLContainer<?> postgreSQLContainer = new PostgreSQLContainer<>("postgres:latest");
     private BookDao bookDao;
 
 
 
-
     @BeforeAll
-    static void setUp() {
-        dataSource = mockStatic(DataSource.class);
+    static void prepareDatabase() throws SQLException {
+        postgreSQLContainer.start();
+        DataSource.initialize(postgreSQLContainer.getJdbcUrl(),
+                postgreSQLContainer.getUsername(),
+                postgreSQLContainer.getPassword(),
+                postgreSQLContainer.getDriverClassName());
+
+        try (Connection connection = DataSource.getConnection();
+             Statement statement = connection.createStatement()) {
+            statement.execute(CREATE_READERS_SQL);
+            statement.execute(CREATE_BOOKS_SQL);
+            statement.execute(CREATE_AUTHORS_SQL);
+            statement.execute(CREATE_AUTHOR_BOOK_SQL);
+        }
     }
+
 
     @BeforeEach
-    void init() {
-        bookDao.setAuthorDao(authorDao);
-        bookDao.setReaderDao(readerDao);
-        dataSource.when(DataSource::getConnection).thenReturn(connection);
+    void cleanData() throws SQLException {
+        this.bookDao = new ObjectContainer().getBookDao();
+        try (var connection = DataSource.getConnection();
+             var statement = connection.createStatement()) {
+            statement.execute(CLEAN_AUTHOR_BOOK_SQL);
+            statement.execute(CLEAN_AUTHORS_SQL);
+            statement.execute(CLEAN_BOOKS_SQL);
+            statement.execute(CLEAN_READERS_SQL);
+
+            statement.execute(UPDATE_AUTHOR_ID_SQL);
+            statement.execute(UPDATE_BOOKS_ID_SQL);
+            statement.execute(UPDATE_READERS_ID_SQL);
+
+            statement.execute(INSERT_READERS_SQL);
+            statement.execute(INSERT_BOOKS_SQL);
+            statement.execute(INSERT_AUTHORS_SQL);
+            statement.execute(INSERT_AUTHOR_BOOK_SQL);
+        }
     }
 
 
 
 
 
-    @Test
-    void getAuthorDao() {
-        AuthorDao actualResult = bookDao.getAuthorDao();
 
-        assertNotNull(actualResult);
+
+
+    @Test
+    void setAuthorDao_whenSetNull() {
+        bookDao.setAuthorDao(null);
+
+        assertNull(bookDao.getAuthorDao());
+    }
+
+    @Test
+    void setAuthorDao_whenSetObject() {
+        bookDao.setAuthorDao(null);
+        final AuthorDao authorDao1 = new AuthorDao(null);
+
+        bookDao.setAuthorDao(authorDao1);
+
+        assertNotNull(bookDao.getAuthorDao());
     }
 
 
+    @Test
+    void setReaderDao_whenSetNull() {
+        bookDao.setReaderDao(null);
+
+        assertNull(bookDao.getReaderDao());
+    }
 
     @Test
-    void getReaderDao() {
-        ReaderDao actualResult = bookDao.getReaderDao();
+    void setReaderDao_whenSetObject() {
+        bookDao.setReaderDao(null);
+        final ReaderDao readerDao1 = new ReaderDao();
 
-        assertNotNull(actualResult);
+        bookDao.setReaderDao(readerDao1);
+
+        assertNotNull(bookDao.getReaderDao());
     }
 
 
-
     @Test
-    void findById_whenValidData_thenReturnOptionalOfBook() throws SQLException {
+    public void findById_whenValidId_thenReturnOptionalOfBook() {
+        final Long expectedId = 1L;
         final Long bookId = 1L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true).when(resultSet).next();
-        doReturn(BOOK_1.getId()).when(resultSet).getLong("id");
-        doReturn(BOOK_1.getTitle()).when(resultSet).getString("title");
-        doReturn(BOOK_1.getInventoryNumber()).when(resultSet).getLong("inventory_number");
-        doReturn(BOOK_1.getReader().getId()).when(resultSet).getLong("reader_id");
-        doReturn(Optional.of(READER_1)).when(readerDao).findById(anyLong());
 
         Optional<Book> actualResult = bookDao.findById(bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
-        verify(resultSet).getLong("id");
-        verify(resultSet).getString("title");
-        verify(resultSet).getLong("inventory_number");
-        verify(resultSet).getLong("reader_id");
-        verify(readerDao).findById(anyLong());
         assertTrue(actualResult.isPresent());
-        assertEquals(bookId, actualResult.get().getId());
+        assertEquals(expectedId, actualResult.get().getId());
     }
 
     @Test
-    void findById_whenInvalidData_thenReturnEmptyOptional() throws SQLException {
-        final Long bookId = 666L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(false).when(resultSet).next();
+    public void findById_whenInvalidId_thenReturnEmptyOptional() {
+        final Long authorId = 666L;
 
-        Optional<Book> actualResult = bookDao.findById(bookId);
+        Optional<Book> actualResult = bookDao.findById(authorId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
         assertTrue(actualResult.isEmpty());
     }
 
-    @Test
-    void findById_whenError_thenTrowException() throws SQLException {
-        final Long bookId = 3L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doThrow(SQLException.class).when(preparedStatement).executeQuery();
-
-        assertThrows(DaoException.class, () -> bookDao.findById(bookId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeQuery();
-    }
-
 
 
     @Test
-    void findAll_whenValidData_thenReturnList() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true, true, true, false).when(resultSet).next();
-        doReturn(BOOK_1.getId()).when(resultSet).getLong("id");
-        doReturn(BOOK_1.getTitle()).when(resultSet).getString("title");
-        doReturn(BOOK_1.getInventoryNumber()).when(resultSet).getLong("inventory_number");
-        doReturn(BOOK_1.getReader().getId()).when(resultSet).getLong("reader_id");
-        doReturn(Optional.of(READER_1)).when(readerDao).findById(anyLong());
-
+    public void findAll_whenExist_thenReturnList() {
         List<Book> actualResult = bookDao.findAll();
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).executeQuery();
-        verify(resultSet, times(4)).next();
-        verify(resultSet, times(3)).getLong("id");
-        verify(resultSet, times(3)).getString("title");
-        verify(resultSet, times(3)).getLong("inventory_number");
-        verify(resultSet, times(3)).getLong("reader_id");
-        verify(readerDao, times(3)).findById(anyLong());
+        assertFalse(actualResult.isEmpty());
         assertEquals(3, actualResult.size());
     }
 
     @Test
-    void findAll_whenInvalidData_thenReturnEmptyList() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(false).when(resultSet).next();
+    public void findAll_whenNotExist_thenReturnEmptyList() {
+        bookDao.delete(1L);
+        bookDao.delete(2L);
+        bookDao.delete(3L);
 
         List<Book> actualResult = bookDao.findAll();
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
         assertTrue(actualResult.isEmpty());
     }
 
-    @Test
-    void findAll_whenError_ThrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doThrow(SQLException.class).when(preparedStatement).executeQuery();
-
-        assertThrows(DaoException.class, () -> bookDao.findAll());
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).executeQuery();
-    }
-
-
 
     @Test
-    void findAllByReaderId_whenValidData_thenReturnList() throws SQLException {
+    public void findAllByReaderId_whenExist_thenReturnList() {
         final Long readerId = 1L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, readerId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true, true, false).when(resultSet).next();
-        doReturn(BOOK_1.getId()).when(resultSet).getLong("id");
-        doReturn(BOOK_1.getTitle()).when(resultSet).getString("title");
-        doReturn(BOOK_1.getInventoryNumber()).when(resultSet).getLong("inventory_number");
-        doReturn(BOOK_1.getReader().getId()).when(resultSet).getLong("reader_id");
-        doReturn(Optional.of(READER_1)).when(readerDao).findById(anyLong());
 
         List<Book> actualResult = bookDao.findAllByReaderId(readerId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).executeQuery();
-        verify(resultSet, times(3)).next();
-        verify(resultSet, times(2)).getLong("id");
-        verify(resultSet, times(2)).getString("title");
-        verify(resultSet, times(2)).getLong("inventory_number");
-        verify(resultSet, times(2)).getLong("reader_id");
-        verify(readerDao, times(2)).findById(anyLong());
-        assertEquals(2, actualResult.size());
+        assertFalse(actualResult.isEmpty());
+        assertEquals(1, actualResult.size());
     }
 
     @Test
-    void findAllByReaderId_whenInvalidData_thenReturnEmptyList() throws SQLException {
-        final Long readerId = 666L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, readerId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(false).when(resultSet).next();
+    public void findAllByReaderId_whenNotExist_thenReturnEmptyList() {
+        final Long readerId = 1L;
+        bookDao.delete(1L);
 
         List<Book> actualResult = bookDao.findAllByReaderId(readerId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, readerId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
         assertTrue(actualResult.isEmpty());
     }
 
-    @Test
-    void findAllByReaderId_whenError_ThrowException() throws SQLException {
-        final Long readerId = 3L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, readerId);
-        doThrow(SQLException.class).when(preparedStatement).executeQuery();
-
-        assertThrows(DaoException.class, () -> bookDao.findAllByReaderId(readerId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, readerId);
-        verify(preparedStatement).executeQuery();
-    }
-
-
 
     @Test
-    void findAllByAuthorId_whenValidData_thenReturnList() throws SQLException {
-        final Long authorId = 1L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true, true, false).when(resultSet).next();
-        doReturn(BOOK_1.getId()).when(resultSet).getLong("id");
-        doReturn(BOOK_1.getTitle()).when(resultSet).getString("title");
-        doReturn(BOOK_1.getInventoryNumber()).when(resultSet).getLong("inventory_number");
-        doReturn(BOOK_1.getReader().getId()).when(resultSet).getLong("reader_id");
-        doReturn(Optional.of(READER_1)).when(readerDao).findById(anyLong());
-
-        List<Book> actualResult = bookDao.findAllByAuthorId(authorId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).executeQuery();
-        verify(resultSet, times(3)).next();
-        verify(resultSet, times(2)).getLong("id");
-        verify(resultSet, times(2)).getString("title");
-        verify(resultSet, times(2)).getLong("inventory_number");
-        verify(resultSet, times(2)).getLong("reader_id");
-        verify(readerDao, times(2)).findById(anyLong());
-        assertEquals(2, actualResult.size());
-    }
-
-    @Test
-    void findAllByAuthorId_whenInvalidData_thenReturnEmptyList() throws SQLException {
-        final Long authorId = 666L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(false).when(resultSet).next();
-
-        List<Book> actualResult = bookDao.findAllByAuthorId(authorId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
-        assertTrue(actualResult.isEmpty());
-    }
-
-    @Test
-    void findAllByAuthorId_whenError_ThrowException() throws SQLException {
+    public void findAllByAuthorId_whenExist_thenReturnList() {
         final Long authorId = 3L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, authorId);
-        doThrow(SQLException.class).when(preparedStatement).executeQuery();
 
-        assertThrows(DaoException.class, () -> bookDao.findAllByAuthorId(authorId));
+        List<Book> actualResult = bookDao.findAllByAuthorId(authorId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, authorId);
-        verify(preparedStatement).executeQuery();
-    }
-
-
-
-    @Test
-    void getAuthorsForBook_whenValidData_thenReturnList() {
-        final Long bookId = 1L;
-        final List<Author> authors = List.of(AUTHOR_1, AUTHOR_2);
-        doReturn(authors).when(authorDao).findAllByBookId(bookId);
-
-        List<Author> actualResult = bookDao.getAuthorsForBook(bookId);
-
-        verify(authorDao).findAllByBookId(bookId);
+        assertFalse(actualResult.isEmpty());
         assertEquals(2, actualResult.size());
     }
 
     @Test
-    void getAuthorsForBook_whenInvalidData_thenReturnEmptyList() {
-        final Long bookId = 666L;
-        doReturn(Collections.emptyList()).when(authorDao).findAllByBookId(bookId);
+    public void findAllByAuthorId_whenNotExist_thenReturnEmptyList() {
+        final Long authorId = 3L;
+        bookDao.delete(1L);
+        bookDao.delete(3L);
 
-        List<Author> actualResult = bookDao.getAuthorsForBook(bookId);
+        List<Book> actualResult = bookDao.findAllByAuthorId(authorId);
 
         assertTrue(actualResult.isEmpty());
     }
 
 
-
     @Test
-    void save_whenValidData_thenSuccess() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString(), anyInt());
-        doNothing().when(preparedStatement).setString(1, BOOK_1.getTitle());
-        doNothing().when(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        doNothing().when(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        doReturn(1).when(preparedStatement).executeUpdate();
-        doReturn(resultSet).when(preparedStatement).getGeneratedKeys();
-        doReturn(true).when(resultSet).next();
-        doReturn(BOOK_1.getId()).when(resultSet).getLong("id");
-        doReturn(true).when(authorBookDao).save(anyLong(), anyLong());
-
-        Book actualResult = bookDao.save(BOOK_1);
-
-        verify(connection).prepareStatement(anyString(), anyInt());
-        verify(preparedStatement).setString(1, BOOK_1.getTitle());
-        verify(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        verify(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        verify(preparedStatement).executeUpdate();
-        verify(preparedStatement).getGeneratedKeys();
-        verify(resultSet).next();
-        verify(resultSet).getLong("id");
-        verify(authorBookDao, times(2)).save(anyLong(), anyLong());
-        assertEquals(BOOK_1.getId(), actualResult.getId());
-    }
-
-    @Test
-    void save_whenGeneratedKeysNextIsFalse() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString(), anyInt());
-        doNothing().when(preparedStatement).setString(1, BOOK_1.getTitle());
-        doNothing().when(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        doNothing().when(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        doReturn(0).when(preparedStatement).executeUpdate();
-        doReturn(resultSet).when(preparedStatement).getGeneratedKeys();
-        doReturn(false).when(resultSet).next();
-
-        bookDao.save(BOOK_1);
-
-        verify(connection).prepareStatement(anyString(), anyInt());
-        verify(preparedStatement).setString(1, BOOK_1.getTitle());
-        verify(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        verify(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        verify(preparedStatement).executeUpdate();
-        verify(preparedStatement).getGeneratedKeys();
-        verify(resultSet).next();
-    }
-
-    @Test
-    void save_whenError_ThrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString(), anyInt());
-        doNothing().when(preparedStatement).setString(1, BOOK_1.getTitle());
-        doNothing().when(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        doNothing().when(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-
-        assertThrows(DaoException.class, () -> bookDao.save(BOOK_1));
-
-        verify(connection).prepareStatement(anyString(), anyInt());
-        verify(preparedStatement).setString(1, BOOK_1.getTitle());
-        verify(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        verify(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        verify(preparedStatement).executeUpdate();
-    }
-
-
-
-    @Test
-    void update_whenValidData_thenReturnTrue() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setString(1, BOOK_1.getTitle());
-        doNothing().when(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        doNothing().when(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        doNothing().when(preparedStatement).setLong(4, BOOK_1.getId());
-        doReturn(1).when(preparedStatement).executeUpdate();
-        doReturn(true).when(authorBookDao).deleteAllByBookId(anyLong());
-        doReturn(true).when(authorBookDao).save(anyLong(), anyLong());
-
-        boolean actualResult = bookDao.update(BOOK_1);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setString(1, BOOK_1.getTitle());
-        verify(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        verify(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        verify(preparedStatement).setLong(4, BOOK_1.getId());
-        verify(preparedStatement).executeUpdate();
-        verify(authorBookDao).deleteAllByBookId(anyLong());
-        verify(authorBookDao, times(2)).save(anyLong(), anyLong());
-        assertTrue(actualResult);
-    }
-
-    @Test
-    void update_whenUpdateResultIsZero_thenReturnFalse() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setString(1, BOOK_1.getTitle());
-        doNothing().when(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        doNothing().when(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        doNothing().when(preparedStatement).setLong(4, BOOK_1.getId());
-        doReturn(0).when(preparedStatement).executeUpdate();
-
-        boolean actualResult = bookDao.update(BOOK_1);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setString(1, BOOK_1.getTitle());
-        verify(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        verify(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        verify(preparedStatement).setLong(4, BOOK_1.getId());
-        verify(preparedStatement).executeUpdate();
-        assertFalse(actualResult);
-    }
-
-    @Test
-    void update_whenError_thenTrowException() throws SQLException {
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setString(1, BOOK_1.getTitle());
-        doNothing().when(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        doNothing().when(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        doNothing().when(preparedStatement).setLong(4, BOOK_1.getId());
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-
-        assertThrows(DaoException.class, () -> bookDao.update(BOOK_1));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setString(1, BOOK_1.getTitle());
-        verify(preparedStatement).setLong(2, BOOK_1.getInventoryNumber());
-        verify(preparedStatement).setLong(3, BOOK_1.getReader().getId());
-        verify(preparedStatement).setLong(4, BOOK_1.getId());
-        verify(preparedStatement).executeUpdate();
-    }
-
-
-
-    @Test
-    void delete_whenValidData_thenReturnTrue() throws SQLException {
-        final Long bookId = 1L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(true).when(authorBookDao).deleteAllByBookId(bookId);
-        doReturn(1).when(preparedStatement).executeUpdate();
-
-        boolean actualResult = bookDao.delete(bookId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(authorBookDao).deleteAllByBookId(bookId);
-        verify(preparedStatement).executeUpdate();
-        assertTrue(actualResult);
-    }
-
-    @Test
-    void delete_whenInvalidData_thenReturnFalse() throws SQLException {
-        final Long bookId = 666L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(false).when(authorBookDao).deleteAllByBookId(bookId);
-        doReturn(0).when(preparedStatement).executeUpdate();
-
-        boolean actualResult = bookDao.delete(bookId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(authorBookDao).deleteAllByBookId(bookId);
-        verify(preparedStatement).executeUpdate();
-        assertFalse(actualResult);
-    }
-
-
-    @Test
-    void delete_whenError_thenThrowException() throws SQLException {
+    void getAuthorsForBook_whenBookHaveAuthor_thenReturnList() {
         final Long bookId = 3L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(false).when(authorBookDao).deleteAllByBookId(bookId);
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
 
-        assertThrows(DaoException.class, () -> bookDao.delete(bookId));
+        List<Author> actualResult = bookDao.getAuthorsForBook(bookId);
 
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(authorBookDao).deleteAllByBookId(bookId);
-        verify(preparedStatement).executeUpdate();
+        assertFalse(actualResult.isEmpty());
+        assertEquals(2, actualResult.size());
+    }
+
+    @Test
+    void getAuthorsForBook_whenBookHaveNotAuthor_thenReturnEmptyList() {
+        final Book book = new Book();
+        book.setTitle("new title");
+        book.setInventoryNumber(55555L);
+        book.setAuthors(Collections.emptyList());
+        book.setReader(SHORT_READER_1);
+        Book saved = bookDao.save(book);
+
+        List<Author> actualResult = bookDao.getAuthorsForBook(saved.getId());
+
+        assertTrue(actualResult.isEmpty());
     }
 
 
+    @Test
+    void save_whenValidData_thenSuccess() {
+        final Book book = new Book();
+        book.setTitle("new title");
+        book.setInventoryNumber(55555L);
+        book.setAuthors(List.of(SHORT_AUTHOR_2, SHORT_AUTHOR_3));
+        book.setReader(SHORT_READER_1);
+
+        Book saved = bookDao.save(book);
+
+        assertEquals(4L, saved.getId());
+        assertEquals(book.getTitle(), saved.getTitle());
+        assertEquals(book.getInventoryNumber(), saved.getInventoryNumber());
+        assertEquals(2, saved.getAuthors().size());
+        assertEquals(1L, saved.getReader().getId());
+    }
 
     @Test
-    void deleteAllByReaderId_whenValidData_thenReturnTrue() throws SQLException {
+    void save_whenTitleIsNull_thenThrowException() {
+        final Book book = new Book();
+        book.setInventoryNumber(55555L);
+        book.setAuthors(List.of(SHORT_AUTHOR_2, SHORT_AUTHOR_3));
+        book.setReader(SHORT_READER_1);
+
+        assertThrows(DaoException.class, () -> bookDao.save(book));
+    }
+
+    @Test
+    void save_whenInventoryNumberIsNotUnique_thenThrowException() {
+        final Book book = new Book();
+        book.setTitle("new title");
+        book.setInventoryNumber(11111L);
+        book.setAuthors(List.of(SHORT_AUTHOR_2, SHORT_AUTHOR_3));
+        book.setReader(SHORT_READER_1);
+
+        assertThrows(DaoException.class, () -> bookDao.save(book));
+    }
+
+
+    @Test
+    void update_whenValidData_thenSuccess() {
+        final Long bookId = 1L;
+        Book updating = bookDao.findById(bookId).get();
+        updating.setTitle("new title");
+        updating.setInventoryNumber(55555L);
+        updating.setAuthors(List.of(AUTHOR_1));
+        updating.setReader(READER_1);
+
+        boolean actualResult = bookDao.update(updating);
+
+        Book updated = bookDao.findById(bookId).get();
+        assertEquals(updating.getTitle(), updated.getTitle());
+        assertEquals(updating.getInventoryNumber(), updated.getInventoryNumber());
+        assertEquals(1L, updated.getReader().getId());
+        assertTrue(actualResult);
+    }
+
+    @Test
+    void update_whenInvalidData_thenFalse() {
+        Book book = new Book();
+        book.setId(666L);
+        book.setTitle("new title");
+        book.setInventoryNumber(55555L);
+        book.setAuthors(List.of(AUTHOR_1));
+        book.setReader(READER_1);
+
+        boolean actualResult = bookDao.update(book);
+
+        assertFalse(actualResult);
+    }
+
+    @Test
+    void update_whenTitleIsNull_thenThrowException() {
+        final Long bookId = 1L;
+        Book updating = bookDao.findById(bookId).get();
+        updating.setTitle(null);
+        updating.setInventoryNumber(55555L);
+        updating.setAuthors(List.of(AUTHOR_1));
+        updating.setReader(READER_1);
+
+        assertThrows(DaoException.class, () -> bookDao.update(updating));
+    }
+
+    @Test
+    void update_whenInventoryNumberIsNotUnique_thenThrowException() {
+        final Long bookId = 1L;
+        Book updating = bookDao.findById(bookId).get();
+        updating.setTitle("new title");
+        updating.setInventoryNumber(33333L);
+        updating.setAuthors(List.of(AUTHOR_1));
+        updating.setReader(READER_1);
+
+        assertThrows(DaoException.class, () -> bookDao.update(updating));
+    }
+
+
+    @Test
+    public void delete_whenValidId_thenTrue() {
+        final Long bookId = 1L;
+
+        boolean actualResult = bookDao.delete(bookId);
+
+        assertEquals(2, bookDao.findAll().size());
+        assertTrue(actualResult);
+    }
+
+    @Test
+    public void delete_whenInvalidId_thenFalse() {
+        final Long bookId = 666L;
+
+        boolean actualResult = bookDao.delete(bookId);
+
+        assertEquals(3, bookDao.findAll().size());
+        assertFalse(actualResult);
+    }
+
+
+    @Test
+    void deleteAllByReaderId_whenExist_thenTrue() {
         final Long readerId = 1L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, readerId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true, true, false).when(resultSet).next();
-        doReturn(true).when(authorBookDao).deleteAllByBookId(anyLong());
-        doReturn(1).when(preparedStatement).executeUpdate();
 
         boolean actualResult = bookDao.deleteAllByReaderId(readerId);
 
-        verify(connection, times(2)).prepareStatement(anyString());
-        verify(preparedStatement, times(2)).setLong(1, readerId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet, times(3)).next();
-        verify(authorBookDao, times(2)).deleteAllByBookId(anyLong());
-        verify(preparedStatement).executeUpdate();
+        assertEquals(2, bookDao.findAll().size());
         assertTrue(actualResult);
     }
 
     @Test
-    void deleteAllByReaderId_whenInvalidData_thenReturnFalse() throws SQLException {
+    void deleteAllByReaderId_whenNotExist_thenFalse() {
         final Long readerId = 666L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, readerId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(false).when(resultSet).next();
-        doReturn(0).when(preparedStatement).executeUpdate();
 
         boolean actualResult = bookDao.deleteAllByReaderId(readerId);
 
-        verify(connection, times(2)).prepareStatement(anyString());
-        verify(preparedStatement, times(2)).setLong(1, readerId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
-        verify(preparedStatement).executeUpdate();
+        assertEquals(3, bookDao.findAll().size());
         assertFalse(actualResult);
     }
 
-    @Test
-    void deleteAllByReaderId_whenError_thenThrowException() throws SQLException {
-        final Long readerId = 3L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, readerId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true, true, false).when(resultSet).next();
-        doReturn(true).when(authorBookDao).deleteAllByBookId(anyLong());
-        doThrow(SQLException.class).when(preparedStatement).executeUpdate();
-
-        assertThrows(DaoException.class, () -> bookDao.deleteAllByReaderId(readerId));
-
-        verify(connection, times(2)).prepareStatement(anyString());
-        verify(preparedStatement, times(2)).setLong(1, readerId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet, times(3)).next();
-        verify(authorBookDao, times(2)).deleteAllByBookId(anyLong());
-        verify(preparedStatement).executeUpdate();
-    }
-
-
 
     @Test
-    void isContainById_whenValidData_thenReturnTrue() throws SQLException {
+    void isContainById_whenValidKey_thenTrue() {
         final Long bookId = 1L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(true).when(resultSet).next();
 
-        boolean actualResult = bookDao.isContainById(bookId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
-        assertTrue(actualResult);
+        assertTrue(bookDao.isContainById(bookId));
     }
 
     @Test
-    void isContainById_whenInvalidData_thenReturnFalse() throws SQLException {
+    void isContainById_whenInvalidKey_thenFalse() {
         final Long bookId = 666L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doReturn(resultSet).when(preparedStatement).executeQuery();
-        doReturn(false).when(resultSet).next();
 
-        boolean actualResult = bookDao.isContainById(bookId);
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeQuery();
-        verify(resultSet).next();
-        assertFalse(actualResult);
-    }
-
-    @Test
-    void isContainById_whenError_thenThrowException() throws SQLException {
-        final Long bookId = 3L;
-        doReturn(preparedStatement).when(connection).prepareStatement(anyString());
-        doNothing().when(preparedStatement).setLong(1, bookId);
-        doThrow(SQLException.class).when(preparedStatement).executeQuery();
-
-        assertThrows(DaoException.class, () -> bookDao.isContainById(bookId));
-
-        verify(connection).prepareStatement(anyString());
-        verify(preparedStatement).setLong(1, bookId);
-        verify(preparedStatement).executeQuery();
+        assertFalse(bookDao.isContainById(bookId));
     }
 
 
 
-
-
-    @AfterEach
-    void tearDown() throws SQLException {
-        preparedStatement.close();
-        connection.close();
-    }
 
     @AfterAll
-    static void deleteAll() {
-        dataSource.close();
+    static void afterAll() throws SQLException {
+        postgreSQLContainer.stop();
     }
-
 
 
 }
